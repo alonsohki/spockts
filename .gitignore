@@ -40,4 +40,4 @@ dist/**/*
 # ignore yarn.lock
 yarn.lock
 
-tsconfig.build.tsbuildinfo
+tsconfig.tsbuildinfo
