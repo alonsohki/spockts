@@ -1,13 +1,8 @@
 import ts from 'typescript';
+import { parseGrammar } from './grammar';
 
-const transformer: ts.TransformerFactory<ts.SourceFile> =
-  (context) => (sourceFile) => {
-    /*const visitor = (node: ts.Node): ts.Node => {
-    return ts.visitEachChild(node, visitor, context);
+export default (_program: ts.Program): ts.TransformerFactory<ts.SourceFile> =>
+  (context) =>
+  (sourceFile) => {
+    return parseGrammar(sourceFile, context);
   };
-
-  return ts.visitNode(sourceFile, visitor);*/
-    return sourceFile;
-  };
-
-export default (_program: ts.Program) => transformer;

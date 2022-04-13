@@ -8,10 +8,11 @@ export default async (): Promise<Config.InitialOptions> => {
     ...baseConfig,
     globals: {
       'ts-jest': {
-        ...(baseConfig.globals['ts-jest'] as {}),
+        compiler: 'ttypescript',
         tsconfig: '<rootDir>/test/tsconfig.usage.json',
       },
     },
+    cache: false,
     testMatch: ['<rootDir>/test/usage/**/*.ts'],
   };
 };
