@@ -13,8 +13,13 @@ export type Generator = {
   (context: ts.TransformationContext, input: GeneratorInput): ts.Node;
 };
 
-const generators: { [K in Frameworks]: Generator } = {
+type GeneratorRecord = { [K in Frameworks]: Generator };
+
+const generators: GeneratorRecord = {
   jest,
 };
 
-export default generators;
+const wrap = (record: GeneratorRecord): GeneratorRecord =>
+  Object.fromEntries(Object.entries(record).map(([key, value]) => [key, (context, input) => input && value(context, input)])) as GeneratorRecord;
+
+export default wrap(generators);

@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { BlockType } from '.';
 import { State } from './state';
 
 const getLabelStatements = (node: ts.LabeledStatement): ts.Statement[] => {
@@ -14,16 +15,19 @@ const getLabelStatements = (node: ts.LabeledStatement): ts.Statement[] => {
 };
 
 export const processLabeledStatement = (node: ts.LabeledStatement, state: State): void => {
-  switch (node.label.text) {
+  const blockType: BlockType = node.label.text as BlockType;
+
+  switch (blockType) {
     case 'given':
     case 'then':
     case 'expect':
     case 'when':
     case 'where':
       const statements = getLabelStatements(node);
-      state[node.label.text].push(...statements);
+      state[blockType].push(...statements);
       break;
+
     default:
-      break;
+      throw new Error(`Unhandled block type ${blockType}`);
   }
 };

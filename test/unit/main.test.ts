@@ -8,6 +8,9 @@ describe('Main test', () => {
       `
 describe('My test', () => {
   it('should sum #a + #b === #c', () => {
+    given:
+    const x = 1;
+
     expect:
     a + b === c
 
