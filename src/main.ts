@@ -1,8 +1,13 @@
 import ts from 'typescript';
-import { parseGrammar } from './grammar';
+import parsers from './parsers';
+import generators from './generators';
+import Framework from './frameworks';
 
 export default (_program: ts.Program): ts.TransformerFactory<ts.SourceFile> =>
   (context) =>
   (sourceFile) => {
-    return parseGrammar(sourceFile, context);
+    const framework: Framework = 'jest';
+    const parser = parsers[framework];
+    const generator = generators[framework].bind(null, context);
+    return parser(sourceFile, context, generator);
   };

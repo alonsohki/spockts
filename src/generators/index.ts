@@ -1,12 +1,17 @@
 import ts from 'typescript';
+import Frameworks from '~/frameworks';
 import { State } from '~/state';
 
-import jest from './jest';
+import jest from './jest-generator';
+
+export type GeneratorInput = State;
 
 export type Generator = {
-  (title: ts.StringLiteral, state: State, context: ts.TransformationContext): ts.Node;
+  (context: ts.TransformationContext, title: ts.StringLiteral, input: GeneratorInput): ts.Node;
 };
 
-export default {
+const generators: { [K in Frameworks]: Generator } = {
   jest,
 };
+
+export default generators;

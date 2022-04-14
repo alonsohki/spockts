@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-export type BlockType = 'expect' | 'where';
+export type BlockType = 'given' | 'then' | 'expect' | 'when' | 'where';
 
 export type State = {
   [K in BlockType]: ts.Statement[];
@@ -8,7 +8,10 @@ export type State = {
 
 export const createState = (): State => {
   return {
+    given: [],
+    then: [],
     expect: [],
+    when: [],
     where: [],
   };
 };
