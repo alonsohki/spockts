@@ -5,8 +5,6 @@ import { createState } from './state';
 import { processLabeledStatement } from './process-labeled-statement';
 import { isSpocktsBlock } from './is-spockts-block';
 
-export type BlockType = 'given' | 'then' | 'expect' | 'when' | 'where';
-
 const processor = (_context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): GeneratorInput | null => {
   if (!isSpocktsBlock(block)) return null;
 

@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import Frameworks from '../frameworks';
+import { Framework } from '../frameworks';
 
 import jest from './jest-parser';
 
@@ -11,7 +11,7 @@ export type Parser = {
   (sourceFile: ts.SourceFile, context: ts.TransformationContext, callback: ParserCallback): ts.SourceFile;
 };
 
-const parsers: { [K in Frameworks]: Parser } = {
+const parsers: { [K in Framework]: Parser } = {
   jest,
 };
 

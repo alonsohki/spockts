@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { BlockType } from '.';
+import { BlockType } from '../block-types';
 
 export type State = {
   [K in BlockType]: ts.Statement[];

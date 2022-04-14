@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import Frameworks from '../frameworks';
+import { Framework } from '../frameworks';
 import { State } from '../processor/state';
 
 import jest from './jest-generator';
@@ -13,7 +13,7 @@ export type Generator = {
   (context: ts.TransformationContext, input: GeneratorInput): ts.Node;
 };
 
-type GeneratorRecord = { [K in Frameworks]: Generator };
+type GeneratorRecord = { [K in Framework]: Generator };
 
 const generators: GeneratorRecord = {
   jest,

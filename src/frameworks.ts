@@ -1,3 +1,1 @@
-type Frameworks = 'jest';
-
-export default Frameworks;
+export type Framework = 'jest';

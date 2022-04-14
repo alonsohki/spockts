@@ -2,7 +2,7 @@ import ts from 'typescript';
 import parsers from './parsers';
 import processor from './processor';
 import generators from './generators';
-import Framework from './frameworks';
+import { Framework } from './frameworks';
 
 export default (_program: ts.Program): ts.TransformerFactory<ts.SourceFile> =>
   (context) =>

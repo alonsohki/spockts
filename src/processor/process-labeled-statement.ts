@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { BlockType } from '.';
+import { BlockType } from '../block-types';
 import { State } from './state';
 
 const getLabelStatements = (node: ts.LabeledStatement): ts.Statement[] => {
