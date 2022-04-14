@@ -1,6 +1,5 @@
 import ts from 'typescript';
-
-export type BlockType = 'given' | 'then' | 'expect' | 'when' | 'where';
+import { BlockType } from '.';
 
 export type State = {
   [K in BlockType]: ts.Statement[];

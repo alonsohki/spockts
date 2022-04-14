@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { Generator, GeneratorInput } from '.';
 
-const generator: Generator = (context: ts.TransformationContext, title: ts.StringLiteral, input: GeneratorInput): ts.Node => {
+const generator: Generator = (context: ts.TransformationContext, input: GeneratorInput): ts.Node => {
   const factory = context.factory;
 
   return factory.createExpressionStatement(
@@ -13,14 +13,14 @@ const generator: Generator = (context: ts.TransformationContext, title: ts.Strin
       ),
       undefined,
       [
-        title,
+        input.title,
         factory.createArrowFunction(
           undefined,
           undefined,
           [],
           undefined,
           factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-          factory.createBlock([...input.expect, ...input.where], true)
+          factory.createBlock([...input.state.expect, ...input.state.where], true)
         ),
       ]
     )

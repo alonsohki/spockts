@@ -14,13 +14,6 @@
     "outDir": "./dist",
     "sourceMap": true,
     "noEmit": false,
-    "plugins": [
-      { "transform": "typescript-transform-paths" },
-      { "transform": "typescript-transform-paths", "afterDeclarations": true },
-    ],
-    "paths": {
-      "~/*": ["src/*"],
-    },
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

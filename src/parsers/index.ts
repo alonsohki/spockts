@@ -1,11 +1,10 @@
 import ts from 'typescript';
-import Frameworks from '~/frameworks';
-import { State } from '~/state';
+import Frameworks from '../frameworks';
 
 import jest from './jest-parser';
 
 export type ParserCallback = {
-  (title: ts.StringLiteral, state: State): ts.Node | undefined;
+  (title: ts.StringLiteral, block: ts.Block): ts.Node | undefined;
 };
 
 export type Parser = {
