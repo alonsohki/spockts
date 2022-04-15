@@ -1,16 +1,11 @@
+import { ProcessorOutput } from 'src/processor/output';
 import ts from 'typescript';
 import { Framework } from '../frameworks';
-import { State } from '../processor/state';
 
 import jest from './jest-generator';
 
-export type GeneratorInput = {
-  title: ts.StringLiteral;
-  state: State;
-};
-
 export type Generator = {
-  (context: ts.TransformationContext, input: GeneratorInput): ts.Node;
+  (context: ts.TransformationContext, input: ProcessorOutput): ts.Node;
 };
 
 type GeneratorRecord = { [K in Framework]: Generator };

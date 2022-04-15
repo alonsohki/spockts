@@ -6,19 +6,18 @@ describe('Main test', () => {
     const sourceFile = ts.createSourceFile(
       'index.ts',
       `
-describe('My test', () => {
-  it('should sum #a + #b === #c', () => {
-    given:
-    const x = 1;
+describe('Some test', () => {
+  given:
+  const x = 1;
 
-    expect:
-    a + b === c
+  and:
+  const y = 2;
 
-    where:
-    a | b || c
-    1 | 2 || 3
-    4 | 5 || 9
- });
+  expect:
+  x + 1 === 2
+
+  and:
+  x + 2 === 3
 });
       `,
       ts.ScriptTarget.Latest,
@@ -32,13 +31,11 @@ describe('My test', () => {
     const printed = ts.createPrinter().printNode(ts.EmitHint.SourceFile, result.transformed[0], sourceFile);
 
     expect(printed).toMatchInlineSnapshot(`
-      "describe('My test', () => {
-          it.each([{}])('should sum #a + #b === #c', () => {
-              a + b === c;
-              a | b || c;
-              1 | 2 || 3;
-              4 | 5 || 9;
-          });
+      "describe('Some test', () => {
+          const x = 1;
+          const y = 2;
+          x + 1 === 2;
+          x + 2 === 3;
       });
       "
     `);
