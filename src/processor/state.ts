@@ -1,16 +1,17 @@
 import ts from 'typescript';
 import { BlockType } from '../block-types';
 
+export type Block = {
+  type: BlockType;
+  statements: ts.Statement[];
+};
+
 export type State = {
-  [K in BlockType]: ts.Statement[];
+  blocks: Block[];
 };
 
 export const createState = (): State => {
   return {
-    given: [],
-    then: [],
-    expect: [],
-    when: [],
-    where: [],
+    blocks: [],
   };
 };

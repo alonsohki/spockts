@@ -3,10 +3,13 @@ import { BlockType } from '../block-types';
 
 const isKnownLabel: { [K in BlockType]: boolean } & { [K: string]: boolean } = {
   given: true,
+  setup: true,
+  when: true,
   then: true,
   expect: true,
-  when: true,
+  cleanup: true,
   where: true,
+  and: true,
 };
 
 export const isSpocktsBlock = (block: ts.Block): boolean =>

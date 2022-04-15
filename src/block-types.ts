@@ -1,1 +1,1 @@
-export type BlockType = 'given' | 'then' | 'expect' | 'when' | 'where';
+export type BlockType = 'given' | 'setup' | 'when' | 'then' | 'expect' | 'cleanup' | 'where' | 'and';
