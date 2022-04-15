@@ -1,7 +1,8 @@
 import { BlockType } from 'src/block-types';
+import ts from 'typescript';
 import { State } from './state';
 
-export const validate = (state: State): void => {
+export const validate = (state: State, context: ts.TransformationContext): void => {
   if (state.blocks.length === 0) return;
 
   const findNotFollowedBy = (types: BlockType[], followedBy: BlockType[], acceptEndOfMethod: boolean) => {
@@ -33,4 +34,25 @@ export const validate = (state: State): void => {
   validateOrder(['expect'], ['and', 'when', 'cleanup', 'where'], true);
   validateOrder(['cleanup'], ['and', 'where'], true);
   validateOrder(['where', 'and'], ['and'], true);
+
+  const hasBlocksMatching = (root: ts.Node, predicate: (node: ts.Node) => boolean): boolean => {
+    let conditionMet = false;
+    const visitor = (node: ts.Node): ts.Node => {
+      if (predicate(node)) {
+        conditionMet = true;
+        return node;
+      } else {
+        return ts.visitEachChild(node, visitor, context);
+      }
+    };
+    ts.visitNode(root, visitor);
+    return conditionMet;
+  };
+
+  const nonSetupStatements = state.blocks.filter((block) => !['given', 'setup'].includes(block.type)).flatMap((block) => block.statements);
+  if (nonSetupStatements.some((statement) => hasBlocksMatching(statement, ts.isVariableDeclarationList)))
+    throw new Error(`Only 'given' and 'setup' blocks can have variable declarations`);
+
+  if (nonSetupStatements.some((statement) => !ts.isExpressionStatement(statement)))
+    throw new Error(`Only expressions are allowed in blocks that are not 'given' or 'setup'`);
 };

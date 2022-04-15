@@ -6,7 +6,7 @@ import { isSpocktsBlock } from './is-spockts-block';
 import { validate } from './validate';
 import { ProcessorOutput } from './output';
 
-const processor = (_context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): ProcessorOutput | null => {
+const processor = (context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): ProcessorOutput | null => {
   if (!isSpocktsBlock(block)) return null;
 
   const state = createState();
@@ -16,7 +16,7 @@ const processor = (_context: ts.TransformationContext, title: ts.StringLiteral, 
     }
   );
 
-  validate(state);
+  validate(state, context);
 
   return {
     title,
