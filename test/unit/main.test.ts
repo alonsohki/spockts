@@ -8,10 +8,12 @@ describe('Main test', () => {
       `
 describe('Some test', () => {
   given:
-  const x = 1;
+  const x: number = 1;
 
   and:
-  const y = 2;
+  const { p: P = 1, q: { r: R, s: [t, ...u] }, ...rest } = { p: 3, q: { r: 4, s: [0, 1, 2] } };
+  P = 100;
+  const [m = P + 12, n] = [2, 3];
 
   expect:
   x + 1 === 2
@@ -32,10 +34,13 @@ describe('Some test', () => {
 
     expect(printed).toMatchInlineSnapshot(`
       "describe('Some test', () => {
-          const x = 1;
-          const y = 2;
-          x + 1 === 2;
-          x + 2 === 3;
+          let x: number;
+          let P, R, t, u, rest;
+          let m, n;
+          x = 1;
+          ({ p: P = 1, q: { r: R, s: [t, ...u] }, ...rest } = { p: 3, q: { r: 4, s: [0, 1, 2] } });
+          P = 100;
+          ([m = P + 12, n] = [2, 3]);
       });
       "
     `);

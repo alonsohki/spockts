@@ -16,5 +16,8 @@ export const isSpocktsBlock = (block: ts.Block): boolean =>
   block.statements.length > 0 &&
   ts.isLabeledStatement(block.statements[0]) &&
   block.statements.every(
-    (statement) => ts.isExpressionStatement(statement) || (ts.isLabeledStatement(statement) && isKnownLabel[statement.label.text])
+    (statement) =>
+      ts.isExpressionStatement(statement) ||
+      ts.isVariableStatement(statement) ||
+      (ts.isLabeledStatement(statement) && isKnownLabel[statement.label.text])
   );

@@ -5,7 +5,7 @@ import { ProcessorOutput } from 'src/processor/output';
 const generator: Generator = (context: ts.TransformationContext, input: ProcessorOutput): ts.Node => {
   const factory = context.factory;
 
-  const root = factory.createBlock([...input.state.blocks.flatMap((x) => x.statements)], true);
+  const root = factory.createBlock([...input.setup.declarations, ...input.setup.statements], true);
   return root;
 };
 

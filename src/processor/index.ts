@@ -5,6 +5,7 @@ import { processLabeledStatement } from './process-labeled-statement';
 import { isSpocktsBlock } from './is-spockts-block';
 import { validate } from './validate';
 import { ProcessorOutput } from './output';
+import { processSetupBlocks } from './setup-blocks';
 
 const processor = (context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): ProcessorOutput | null => {
   if (!isSpocktsBlock(block)) return null;
@@ -18,8 +19,12 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
 
   validate(state, context);
 
+  const setupBlocks = state.blocks.filter((block) => ['given', 'setup'].includes(block.type)).flatMap((block) => block.statements);
+  const setup = processSetupBlocks(context, setupBlocks);
+
   return {
     title,
+    setup,
     state,
   };
 };
