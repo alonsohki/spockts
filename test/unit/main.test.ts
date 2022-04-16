@@ -37,10 +37,12 @@ describe('Some test', () => {
           let x: number;
           let P, R, t, u, rest;
           let m, n;
-          x = 1;
-          ({ p: P = 1, q: { r: R, s: [t, ...u] }, ...rest } = { p: 3, q: { r: 4, s: [0, 1, 2] } });
-          P = 100;
-          ([m = P + 12, n] = [2, 3]);
+          beforeAll(async () => {
+              x = 1;
+              ({ p: P = 1, q: { r: R, s: [t, ...u] }, ...rest } = { p: 3, q: { r: 4, s: [0, 1, 2] } });
+              P = 100;
+              ([m = P + 12, n] = [2, 3]);
+          });
       });
       "
     `);
