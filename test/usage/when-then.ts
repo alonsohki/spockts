@@ -9,4 +9,12 @@ describe('when-then tests', () => {
   c === a + b
   c > a
   c > b
+
+  when:
+  const d = c;
+
+  then:
+  d === a + b
+  d > a
+  d > b
 });
