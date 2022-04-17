@@ -1,8 +1,10 @@
+import { tsquery } from '@phenomnomnominal/tsquery';
 import ts from 'typescript';
 
 export type Setup = {
   declarations: ts.VariableStatement[];
   statements: ts.Statement[];
+  async: boolean;
 };
 
 const extractIdentifiersFromBindingPattern = (pattern: ts.BindingPattern): ts.Identifier[] => {
@@ -103,6 +105,7 @@ export const processSetupBlocks = (context: ts.TransformationContext, statements
   const setup: Setup = {
     declarations: [],
     statements: [],
+    async: false,
   };
 
   statements.forEach((statement) => {
@@ -111,6 +114,9 @@ export const processSetupBlocks = (context: ts.TransformationContext, statements
     } else {
       setup.statements.push(statement);
     }
+
+    const awaitTokens = tsquery(statement, 'AwaitExpression');
+    if (awaitTokens.length > 0) setup.async = true;
   });
 
   return setup;
