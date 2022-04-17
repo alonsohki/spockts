@@ -8,7 +8,10 @@ type RetType<T extends BlockType> = T extends 'given' | 'setup' | 'when' | 'clea
   ? never
   : ts.ExpressionStatement;
 
-const getLabelStatements = <T extends BlockType>(type: T, node: ts.LabeledStatement): RetType<T>[] | null => {
+const getLabelStatements = <T extends BlockType>(
+  type: T,
+  node: ts.LabeledStatement
+): { title?: ts.StringLiteral; statements: RetType<T>[] } | null => {
   if (type === 'and') throw new Error(`Invalid block type 'and' when reading label statements`);
 
   const checkStatements = (statements: ts.Statement[]): RetType<T>[] => {
@@ -20,16 +23,18 @@ const getLabelStatements = <T extends BlockType>(type: T, node: ts.LabeledStatem
     return statements as RetType<T>[];
   };
 
-  if (ts.isBlock(node.statement)) return checkStatements([...node.statement.statements]);
-
   if (!ts.isBlock(node.parent)) return null;
 
   const parentIndex = node.parent.statements.findIndex((x) => x === node);
   const nextStatements = node.parent.statements.slice(parentIndex + 1);
   const nextLabel = nextStatements.findIndex((x) => x.kind === ts.SyntaxKind.LabeledStatement);
+  const title = (ts.isExpressionStatement(node.statement) && ts.isStringLiteral(node.statement.expression) && node.statement.expression) || undefined;
 
-  const statements = [node.statement, ...(nextLabel === -1 ? nextStatements : nextStatements.slice(0, nextLabel))];
-  return checkStatements(statements);
+  const statements = checkStatements([
+    ...(title ? [] : [node.statement]),
+    ...(nextLabel === -1 ? nextStatements : nextStatements.slice(0, nextLabel)),
+  ]);
+  return { title, statements };
 };
 
 const processBlockOfType = (node: ts.LabeledStatement, blockType: BlockType): Block | undefined => {
@@ -38,15 +43,19 @@ const processBlockOfType = (node: ts.LabeledStatement, blockType: BlockType): Bl
     case 'setup':
     case 'when':
     case 'cleanup':
-      const setupStatements = getLabelStatements(blockType, node);
-      if (setupStatements) return { type: blockType, statements: setupStatements };
+      {
+        const data = getLabelStatements(blockType, node);
+        if (data.statements) return { title: data.title, type: blockType, statements: data.statements };
+      }
       break;
 
     case 'then':
     case 'expect':
     case 'where':
-      const statements = getLabelStatements(blockType, node);
-      if (statements) return { type: blockType, statements };
+      {
+        const data = getLabelStatements(blockType, node);
+        if (data.statements) return { title: data.title, type: blockType, statements: data.statements };
+      }
       break;
 
     default:

@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-export type Block =
+export type Block = { title?: ts.StringLiteral } & (
   | {
       type: 'then' | 'expect' | 'where';
       statements: ts.ExpressionStatement[];
@@ -12,6 +12,7 @@ export type Block =
   | {
       type: 'and';
       statements: never;
-    };
+    }
+);
 
 export type BlockType = Block['type'];

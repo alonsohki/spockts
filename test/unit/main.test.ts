@@ -12,7 +12,7 @@ describe('Main test', () => {
   P = 100;
   const [m = P + 12, n] = [2, 3];
 
-  when:
+  when: "setting w to 1"
   const w = 1;
 
   then:
@@ -33,7 +33,7 @@ describe('Main test', () => {
               P = 100;
               ([m = P + 12, n] = [2, 3]);
           });
-          describe(\\"\\", () => {
+          describe(\\"setting w to 1\\", () => {
               beforeAll(() => {
                   w = 1;
               });

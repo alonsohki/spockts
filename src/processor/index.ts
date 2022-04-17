@@ -27,7 +27,7 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
     if (when.type === 'when') {
       const then = state.blocks[index + 1];
       if (then.type !== 'then') throw new Error(`Unexpected block type 'then' after a 'when' block`);
-      target.push({ when: processSetupBlock(context, when.statements), then: then.statements.map(processCondition) });
+      target.push({ title: when.title, when: processSetupBlock(context, when.statements), then: then.statements.map(processCondition) });
     }
     return target;
   }, [] as WhenThenBlock[]);

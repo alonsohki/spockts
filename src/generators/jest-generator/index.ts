@@ -26,7 +26,7 @@ const generator: Generator = (context: ts.TransformationContext, input: Processo
 
       ...(input.setup.statements.length > 0 ? [beforeAll(context, input.setup.async, input.setup.statements)] : []),
 
-      ...input.whenThen.map((whenThen) => describe(context, factory.createStringLiteral(''), mapWhenThen(context, whenThen))),
+      ...input.whenThen.map((whenThen) => describe(context, whenThen.title ?? factory.createStringLiteral(''), mapWhenThen(context, whenThen))),
     ],
     true
   );

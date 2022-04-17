@@ -4,6 +4,7 @@ import { SetupBlockInfo } from './process-setup-block';
 import { State } from './state';
 
 export type WhenThenBlock = {
+  title?: ts.StringLiteral;
   when: SetupBlockInfo;
   then: Condition[];
 };
