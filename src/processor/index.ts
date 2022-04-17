@@ -4,8 +4,8 @@ import { createState } from './state';
 import { processLabeledStatement } from './process-labeled-statement';
 import { isSpocktsBlock } from './is-spockts-block';
 import { validate } from './validate';
-import { ProcessorOutput } from './output';
-import { processSetupBlocks } from './setup-blocks';
+import { ProcessorOutput, WhenThenBlock } from './output';
+import { processSetupBlock } from './process-setup-block';
 
 const processor = (context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): ProcessorOutput | null => {
   if (!isSpocktsBlock(block)) return null;
@@ -19,12 +19,22 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
 
   validate(state, context);
 
-  const setupBlocks = state.blocks.filter((block) => ['given', 'setup'].includes(block.type)).flatMap((block) => block.statements);
-  const setup = processSetupBlocks(context, setupBlocks);
+  const setupBlocks = state.blocks.filter((block) => ['given', 'setup'].includes(block.type as string)).flatMap((block) => block.statements);
+  const setup = processSetupBlock(context, setupBlocks);
+
+  const whenThen = state.blocks.reduce((target, when, index) => {
+    if (when.type === 'when') {
+      const then = state.blocks[index + 1];
+      if (then.type !== 'then') throw new Error(`Unexpected block type 'then' after a 'when' block`);
+      target.push({ when: processSetupBlock(context, when.statements), then: then.statements });
+    }
+    return target;
+  }, [] as WhenThenBlock[]);
 
   return {
     title,
     setup,
+    whenThen,
     state,
   };
 };

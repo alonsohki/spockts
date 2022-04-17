@@ -1,4 +1,0 @@
-describe('aaaa', () => {
-  it('bbbb', () => {
-  });
-});

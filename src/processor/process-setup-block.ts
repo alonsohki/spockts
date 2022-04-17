@@ -1,7 +1,7 @@
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts from 'typescript';
 
-export type Setup = {
+export type SetupBlockInfo = {
   declarations: ts.VariableStatement[];
   statements: ts.Statement[];
   async: boolean;
@@ -54,7 +54,11 @@ const transformLHS = (context: ts.TransformationContext, node: ts.BindingName): 
   throw new Error(`Unknown binding pattern type`);
 };
 
-const processBindingDeclaration = (context: ts.TransformationContext, node: ts.VariableDeclaration, setup: Setup): ts.VariableDeclaration[] => {
+const processBindingDeclaration = (
+  context: ts.TransformationContext,
+  node: ts.VariableDeclaration,
+  info: SetupBlockInfo
+): ts.VariableDeclaration[] => {
   const factory = context.factory;
 
   if (!node.initializer) {
@@ -65,31 +69,31 @@ const processBindingDeclaration = (context: ts.TransformationContext, node: ts.V
   const initializationStatement = factory.createExpressionStatement(
     factory.createParenthesizedExpression(factory.createBinaryExpression(lhs, ts.SyntaxKind.EqualsToken, node.initializer))
   );
-  setup.statements.push(initializationStatement);
+  info.statements.push(initializationStatement);
 
   return extractIdentifiersFromBindingPattern(node.name as ts.BindingPattern).map((i) =>
     factory.createVariableDeclaration(i.text, node.exclamationToken, node.type)
   );
 };
 
-const processRegularDeclaration = (context: ts.TransformationContext, node: ts.VariableDeclaration, setup: Setup): ts.VariableDeclaration => {
+const processRegularDeclaration = (context: ts.TransformationContext, node: ts.VariableDeclaration, info: SetupBlockInfo): ts.VariableDeclaration => {
   const factory = context.factory;
 
   if (node.initializer) {
     const initializationStatement = factory.createExpressionStatement(
       factory.createBinaryExpression(node.name as ts.Identifier, ts.SyntaxKind.EqualsToken, node.initializer)
     );
-    setup.statements.push(initializationStatement);
+    info.statements.push(initializationStatement);
   }
 
   return factory.createVariableDeclaration(node.name, node.exclamationToken, node.type);
 };
 
-const extractVariablesAndInitializers = (context: ts.TransformationContext, statement: ts.VariableStatement, setup: Setup): void => {
+const extractVariablesAndInitializers = (context: ts.TransformationContext, statement: ts.VariableStatement, info: SetupBlockInfo): void => {
   const factory = context.factory;
 
   const transformVariableDeclaration = (node: ts.VariableDeclaration): ts.VariableDeclaration | ts.VariableDeclaration[] =>
-    ts.isIdentifier(node.name) ? processRegularDeclaration(context, node, setup) : processBindingDeclaration(context, node, setup);
+    ts.isIdentifier(node.name) ? processRegularDeclaration(context, node, info) : processBindingDeclaration(context, node, info);
 
   const visitor = (node: ts.Node): ts.Node => {
     if (ts.isVariableDeclarationList(node)) {
@@ -98,11 +102,11 @@ const extractVariablesAndInitializers = (context: ts.TransformationContext, stat
     }
     return ts.visitEachChild(node, visitor, context);
   };
-  setup.declarations.push(ts.visitNode(statement, visitor));
+  info.declarations.push(ts.visitNode(statement, visitor));
 };
 
-export const processSetupBlocks = (context: ts.TransformationContext, statements: ts.Statement[]): Setup => {
-  const setup: Setup = {
+export const processSetupBlock = (context: ts.TransformationContext, statements: ts.Statement[]): SetupBlockInfo => {
+  const info: SetupBlockInfo = {
     declarations: [],
     statements: [],
     async: false,
@@ -110,14 +114,14 @@ export const processSetupBlocks = (context: ts.TransformationContext, statements
 
   statements.forEach((statement) => {
     if (ts.isVariableStatement(statement)) {
-      extractVariablesAndInitializers(context, statement, setup);
+      extractVariablesAndInitializers(context, statement, info);
     } else {
-      setup.statements.push(statement);
+      info.statements.push(statement);
     }
 
     const awaitTokens = tsquery(statement, 'AwaitExpression');
-    if (awaitTokens.length > 0) setup.async = true;
+    if (awaitTokens.length > 0) info.async = true;
   });
 
-  return setup;
+  return info;
 };

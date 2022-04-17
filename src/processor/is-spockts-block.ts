@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { BlockType } from '../block-types';
+import { BlockType } from './block';
 
 const isKnownLabel: { [K in BlockType]: boolean } & { [K: string]: boolean } = {
   given: true,

@@ -1,10 +1,4 @@
-import ts from 'typescript';
-import { BlockType } from '../block-types';
-
-export type Block = {
-  type: BlockType;
-  statements: ts.Statement[];
-};
+import { Block } from './block';
 
 export type State = {
   blocks: Block[];

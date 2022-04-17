@@ -1,9 +1,26 @@
 import ts from 'typescript';
-import { BlockType } from '../block-types';
+import { Block, BlockType } from './block';
 import { State } from './state';
 
-const getLabelStatements = (node: ts.LabeledStatement): ts.Statement[] | null => {
-  if (ts.isBlock(node.statement)) return [...node.statement.statements];
+type RetType<T extends BlockType> = T extends 'given' | 'setup' | 'when' | 'cleanup'
+  ? ts.Statement
+  : T extends 'and'
+  ? never
+  : ts.ExpressionStatement;
+
+const getLabelStatements = <T extends BlockType>(type: T, node: ts.LabeledStatement): RetType<T>[] | null => {
+  if (type === 'and') throw new Error(`Invalid block type 'and' when reading label statements`);
+
+  const checkStatements = (statements: ts.Statement[]): RetType<T>[] => {
+    if (type === 'given' || type === 'setup' || type === 'when') return statements as RetType<T>[];
+    const nonExpression = statements.find((statement) => !ts.isExpressionStatement(statement));
+    if (nonExpression) {
+      throw new Error(`Blocks that are not 'given' or 'setup' cannot contain non-expression statements. Found: ${nonExpression.getText()}`);
+    }
+    return statements as RetType<T>[];
+  };
+
+  if (ts.isBlock(node.statement)) return checkStatements([...node.statement.statements]);
 
   if (!ts.isBlock(node.parent)) return null;
 
@@ -11,34 +28,46 @@ const getLabelStatements = (node: ts.LabeledStatement): ts.Statement[] | null =>
   const nextStatements = node.parent.statements.slice(parentIndex + 1);
   const nextLabel = nextStatements.findIndex((x) => x.kind === ts.SyntaxKind.LabeledStatement);
 
-  return [node.statement, ...(nextLabel === -1 ? nextStatements : nextStatements.slice(0, nextLabel))];
+  const statements = [node.statement, ...(nextLabel === -1 ? nextStatements : nextStatements.slice(0, nextLabel))];
+  return checkStatements(statements);
 };
 
-export const processLabeledStatement = (node: ts.LabeledStatement, state: State): void => {
-  const blockType: BlockType = node.label.text as BlockType;
-
+const processBlockOfType = (node: ts.LabeledStatement, blockType: BlockType): Block | undefined => {
   switch (blockType) {
-    case 'and':
-      const length = state.blocks.length;
-      if (length === 0)
-        throw new Error(`'and' is not allowed here; instead, use one of: [setup, given, expect, when, cleanup, where, end-of-method]`);
-
-      const andStatements = getLabelStatements(node);
-      if (andStatements) state.blocks[length - 1].statements.push(...andStatements);
-      break;
-
     case 'given':
     case 'setup':
     case 'when':
+    case 'cleanup':
+      const setupStatements = getLabelStatements(blockType, node);
+      if (setupStatements) return { type: blockType, statements: setupStatements };
+      break;
+
     case 'then':
     case 'expect':
-    case 'cleanup':
     case 'where':
-      const statements = getLabelStatements(node);
-      if (statements) state.blocks.push({ type: blockType, statements });
+      const statements = getLabelStatements(blockType, node);
+      if (statements) return { type: blockType, statements };
       break;
 
     default:
       throw new Error(`Unhandled block type ${blockType}`);
   }
 };
+
+const processBlock = (node: ts.LabeledStatement, state: State): void => {
+  let blockType = node.label.text as BlockType;
+
+  if (blockType === 'and') {
+    const length = state.blocks.length;
+    if (length === 0) throw new Error(`'and' is not allowed here; instead, use one of: [setup, given, expect, when, cleanup, where, end-of-method]`);
+
+    const prevBlock = state.blocks[length - 1];
+    const block = processBlockOfType(node, prevBlock.type);
+    (prevBlock.statements as any[]).push(...block.statements);
+    return;
+  }
+
+  state.blocks.push(processBlockOfType(node, blockType));
+};
+
+export const processLabeledStatement = (node: ts.LabeledStatement, state: State) => processBlock(node, state);
