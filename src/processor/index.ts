@@ -6,6 +6,7 @@ import { isSpocktsBlock } from './is-spockts-block';
 import { validate } from './validate';
 import { ProcessorOutput, WhenThenBlock } from './output';
 import { processSetupBlock } from './process-setup-block';
+import { processCondition } from './conditions';
 
 const processor = (context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): ProcessorOutput | null => {
   if (!isSpocktsBlock(block)) return null;
@@ -26,7 +27,7 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
     if (when.type === 'when') {
       const then = state.blocks[index + 1];
       if (then.type !== 'then') throw new Error(`Unexpected block type 'then' after a 'when' block`);
-      target.push({ when: processSetupBlock(context, when.statements), then: then.statements });
+      target.push({ when: processSetupBlock(context, when.statements), then: then.statements.map(processCondition) });
     }
     return target;
   }, [] as WhenThenBlock[]);

@@ -6,6 +6,7 @@ describe('when-then tests', () => {
   const c = a + b;
 
   then:
+  c === a + b
   c > a
   c > b
 });

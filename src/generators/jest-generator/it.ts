@@ -4,7 +4,7 @@ export const it = (context: ts.TransformationContext, title: ts.StringLiteral, a
   const factory = context.factory;
 
   return factory.createExpressionStatement(
-    factory.createCallExpression(factory.createIdentifier('it'), undefined, [
+    factory.createCallExpression(factory.createIdentifier('test'), undefined, [
       title,
       factory.createArrowFunction(
         async ? [factory.createModifier(ts.SyntaxKind.AsyncKeyword)] : undefined,

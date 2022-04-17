@@ -2,7 +2,8 @@ import { transpile } from './utils';
 
 describe('Main test', () => {
   it('should do something', () => {
-    expect(transpile(`
+    expect(
+      transpile(`
   given:
   const x: number = 1;
 
@@ -19,8 +20,8 @@ describe('Main test', () => {
 
   and:
   w === 1
-      `))
-      .toMatchInlineSnapshot(`
+      `)
+    ).toMatchInlineSnapshot(`
       "describe('My test', () => {
           let x: number;
           let P, R, t, u, rest;
@@ -36,11 +37,11 @@ describe('Main test', () => {
               beforeAll(() => {
                   w = 1;
               });
-              it(\\"w > 0\\", () => {
-                  expect(w > 0).toBeTruthy();
+              test(\\"w is greater than 0\\", () => {
+                  expect(w).toBeGreaterThan(0);
               });
-              it(\\"w === 1\\", () => {
-                  expect(w === 1).toBeTruthy();
+              test(\\"w strictly equals 1\\", () => {
+                  expect(w).toStrictEqual(1);
               });
           });
       });
