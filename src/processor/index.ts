@@ -12,7 +12,7 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
   if (!isSpocktsBlock(block)) return null;
 
   const state = createState();
-  tsquery(block, 'LabeledStatement:has(Identifier[name=/given|setup|when|then|expect|cleanup|where|and/])').forEach(
+  tsquery(block, 'LabeledStatement:has(Identifier[name=/^(given|setup|when|then|expect|cleanup|where|and)$/])').forEach(
     (labeledStatement: ts.LabeledStatement) => {
       processLabeledStatement(labeledStatement, state);
     }
