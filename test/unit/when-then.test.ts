@@ -21,8 +21,6 @@ describe('when-then', () => {
         "describe('My test', () => {
             let a;
             let b;
-            beforeAll(() => {
-            });
             describe(\\"\\", () => {
                 beforeAll(() => {
                     a = 1;

@@ -22,8 +22,6 @@ describe('Conditions', () => {
     ).toMatchInlineSnapshot(`
       "describe('My test', () => {
           let a, b, c, d;
-          beforeAll(() => {
-          });
           describe(\\"\\", () => {
               beforeAll(() => {
                   a = 1;
