@@ -1,12 +1,8 @@
-import ts from 'typescript';
-import transformerFactory from '~/main';
+import { transpile } from './utils';
 
 describe('Main test', () => {
   it('should do something', () => {
-    const sourceFile = ts.createSourceFile(
-      'index.ts',
-      `
-describe('Some test', () => {
+    expect(transpile(`
   given:
   const x: number = 1;
 
@@ -23,20 +19,9 @@ describe('Some test', () => {
 
   and:
   w === 1
-});
-      `,
-      ts.ScriptTarget.Latest,
-      true
-    );
-    const program = ts.createProgram({
-      rootNames: ['index.ts'],
-      options: {},
-    });
-    const result = ts.transform(sourceFile, [transformerFactory(program)]);
-    const printed = ts.createPrinter().printNode(ts.EmitHint.SourceFile, result.transformed[0], sourceFile);
-
-    expect(printed).toMatchInlineSnapshot(`
-      "describe('Some test', () => {
+      `))
+      .toMatchInlineSnapshot(`
+      "describe('My test', () => {
           let x: number;
           let P, R, t, u, rest;
           let m, n;
