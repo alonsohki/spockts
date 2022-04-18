@@ -80,4 +80,10 @@ describe('Conditions', async () => {
   then:
   await asyncFn() === 42
   p === 42
+
+  expect: "Expect blocks"
+  b < 90000
+
+  and:
+  b < 90001
 });

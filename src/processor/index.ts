@@ -7,6 +7,7 @@ import { validate } from './validate';
 import { CleanupInfo, ProcessorOutput, WhenThenBlock } from './output';
 import { processSetupBlock } from './process-setup-block';
 import { looksLikeACondition, processCondition } from './conditions';
+import { Block } from './block';
 
 const processor = (context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): ProcessorOutput | null => {
   if (!isSpocktsBlock(block)) return null;
@@ -26,10 +27,25 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
   const setup = processSetupBlock(context, setupBlocks);
 
   //---------------------------------------------------------------------------
+  // Transform expect blocks to When-Then
+  const whenThenBlocks: Block[] = state.blocks.flatMap((block) => {
+    if (block.type === 'expect') {
+      return [
+        { type: 'when', title: block.title, statements: [] },
+        { type: 'then', title: undefined, statements: block.statements },
+      ];
+    } else if (block.type === 'when' || block.type === 'then') {
+      return [block];
+    } else {
+      return [];
+    }
+  });
+
+  //---------------------------------------------------------------------------
   // When-Then
-  const whenThen = state.blocks.reduce((target, when, index) => {
+  const whenThen = whenThenBlocks.reduce((target, when, index) => {
     if (when.type === 'when') {
-      const then = state.blocks[index + 1];
+      const then = whenThenBlocks[index + 1];
       if (then.type !== 'then') throw new Error(`Unexpected block type 'then' after a 'when' block`);
 
       const thenConditions = then.statements.filter((s) => looksLikeACondition(s));
