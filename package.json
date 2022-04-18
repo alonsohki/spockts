@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "TypeScript transformed inspired in the Spock framework for testing",
   "main": "dist/main.js",
+  "bin": {
+    "spockts": "npm run --silent cli"
+  },
   "scripts": {
     "build": "ttsc",
+    "cli": "ts-node --compiler ttypescript src/cli.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "npm run lint -- --fix",
     "prettier:format": "prettier --config .prettierrc '{src,test}/**/*.ts' --write",
