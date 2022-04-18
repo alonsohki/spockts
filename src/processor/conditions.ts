@@ -1,20 +1,23 @@
 import ts from 'typescript';
+import { tsquery } from '@phenomnomnominal/tsquery';
 
-export type ExpressionCondition = {
-  __type: 'expression';
+type BaseCondition = {
   expression: ts.Expression;
+  async: boolean;
 };
 
-export type UnaryCondition = {
+export type ExpressionCondition = BaseCondition & {
+  __type: 'expression';
+};
+
+export type UnaryCondition = BaseCondition & {
   __type: 'unary';
-  expression: ts.Expression;
   operand: ts.Expression;
   operator: ts.SyntaxKind.ExclamationToken;
 };
 
-export type BinaryCondition = {
+export type BinaryCondition = BaseCondition & {
   __type: 'binary';
-  expression: ts.Expression;
   lhs: ts.Expression;
   op: ts.BinaryOperatorToken;
   rhs: ts.Expression;
@@ -27,9 +30,12 @@ export const isBinaryCondition = (cond: Condition): cond is BinaryCondition => c
 export const isExpressionCondition = (cond: Condition): cond is ExpressionCondition => cond.__type === 'expression';
 
 export const processCondition = (statement: ts.ExpressionStatement): Condition => {
+  const async = tsquery(statement, 'AwaitExpression').length > 0;
+
   if (ts.isBinaryExpression(statement.expression)) {
     return {
       __type: 'binary',
+      async,
       expression: statement.expression,
       lhs: statement.expression.left,
       op: statement.expression.operatorToken,
@@ -38,6 +44,7 @@ export const processCondition = (statement: ts.ExpressionStatement): Condition =
   } else if (ts.isPrefixUnaryExpression(statement.expression) && statement.expression.operator === ts.SyntaxKind.ExclamationToken) {
     return {
       __type: 'unary',
+      async,
       expression: statement.expression,
       operand: statement.expression.operand,
       operator: ts.SyntaxKind.ExclamationToken,
@@ -45,6 +52,7 @@ export const processCondition = (statement: ts.ExpressionStatement): Condition =
   } else {
     return {
       __type: 'expression',
+      async,
       expression: statement.expression,
     };
   }

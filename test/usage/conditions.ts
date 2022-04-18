@@ -1,4 +1,4 @@
-describe('Conditions', () => {
+describe('Conditions', async () => {
   when: "value expressions"
   const a = 1, b = 2, c = [1, 2, 3], e = new Error();
 
@@ -72,4 +72,12 @@ describe('Conditions', () => {
 
   !n
   !u
+
+  when: "async/await"
+  const asyncFn = async() => Promise.resolve(42);
+  const p = await asyncFn();
+
+  then:
+  await asyncFn() === 42
+  p === 42
 });

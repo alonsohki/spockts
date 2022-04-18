@@ -1,11 +1,13 @@
 import ts from 'typescript';
 import transformerFactory from '~/main';
 
-export const transpile = (sourceCode: string): string => {
-  const sourceFile = ts.createSourceFile('index.ts', `
-  describe('My test', () => {
-    ${sourceCode}
-  });`, ts.ScriptTarget.Latest, true);
+export const transpile = (sourceCode: string, addDescribe: boolean = true): string => {
+  const text = !addDescribe ? sourceCode : `
+    describe('My test', () => {
+      ${sourceCode}
+    });`;
+
+  const sourceFile = ts.createSourceFile('index.ts', text, ts.ScriptTarget.Latest, true);
 
   const program = ts.createProgram({
     rootNames: ['index.ts'],
