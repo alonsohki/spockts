@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { it } from './it';
-import { Condition, isExpressionCondition, isUnaryCondition } from '../../processor/conditions';
+import { Condition, isTruthyCondition, isFalsyCondition } from '../../processor/conditions';
 
 const parseCondition = (context: ts.TransformationContext, cond: Condition): { title: string; accessor: ts.CallExpression } => {
   const factory = context.factory;
@@ -18,12 +18,12 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
 
   const text = (expr: ts.Expression, opName: string, expr2?: ts.Expression) => `${expr.getText()} ${opName}${expr2 ? ` ${expr2.getText()}` : ''}`;
 
-  if (isExpressionCondition(cond)) {
+  if (isTruthyCondition(cond)) {
     return {
       title: `${cond.expression.getText()} is truthy`,
       accessor: expect(cond.expression, undefined, 'toBeTruthy'),
     };
-  } else if (isUnaryCondition(cond)) {
+  } else if (isFalsyCondition(cond)) {
     return {
       title: `${cond.operand.getText()} is falsy`,
       accessor: expect(cond.operand, undefined, 'toBeFalsy'),

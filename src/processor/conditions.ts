@@ -6,14 +6,13 @@ type BaseCondition = {
   async: boolean;
 };
 
-export type ExpressionCondition = BaseCondition & {
-  __type: 'expression';
+export type TruthyCondition = BaseCondition & {
+  __type: 'truthy';
 };
 
-export type UnaryCondition = BaseCondition & {
-  __type: 'unary';
+export type FalsyCondition = BaseCondition & {
+  __type: 'falsy';
   operand: ts.Expression;
-  operator: ts.SyntaxKind.ExclamationToken;
 };
 
 export type BinaryCondition = BaseCondition & {
@@ -23,11 +22,11 @@ export type BinaryCondition = BaseCondition & {
   rhs: ts.Expression;
 };
 
-export type Condition = ExpressionCondition | UnaryCondition | BinaryCondition;
+export type Condition = TruthyCondition | FalsyCondition | BinaryCondition;
 
-export const isUnaryCondition = (cond: Condition): cond is UnaryCondition => cond.__type === 'unary';
+export const isTruthyCondition = (cond: Condition): cond is TruthyCondition => cond.__type === 'truthy';
+export const isFalsyCondition = (cond: Condition): cond is FalsyCondition => cond.__type === 'falsy';
 export const isBinaryCondition = (cond: Condition): cond is BinaryCondition => cond.__type === 'binary';
-export const isExpressionCondition = (cond: Condition): cond is ExpressionCondition => cond.__type === 'expression';
 
 export const processCondition = (statement: ts.ExpressionStatement): Condition => {
   const async = tsquery(statement, 'AwaitExpression').length > 0;
@@ -43,15 +42,14 @@ export const processCondition = (statement: ts.ExpressionStatement): Condition =
     };
   } else if (ts.isPrefixUnaryExpression(statement.expression) && statement.expression.operator === ts.SyntaxKind.ExclamationToken) {
     return {
-      __type: 'unary',
+      __type: 'falsy',
       async,
       expression: statement.expression,
       operand: statement.expression.operand,
-      operator: ts.SyntaxKind.ExclamationToken,
     };
   } else {
     return {
-      __type: 'expression',
+      __type: 'truthy',
       async,
       expression: statement.expression,
     };
