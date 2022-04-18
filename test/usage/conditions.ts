@@ -28,6 +28,11 @@ describe('Conditions', () => {
   nan === NaN
   NaN === nan
 
+  when: "truthy expressions"
+  then:
+  Number.isFinite(3)
+  !Number.isFinite(3/0)
+
   when: "falsy expressions"
   const n: null = null, u: undefined = undefined, d = true;
 

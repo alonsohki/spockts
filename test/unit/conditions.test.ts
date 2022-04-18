@@ -20,6 +20,9 @@ describe('Conditions', () => {
 
     d instanceof Error
 
+    Number.isFinite(3)
+    !Number.isFinite(3/0)
+
     a == NaN
     a === NaN
 
@@ -85,6 +88,12 @@ describe('Conditions', () => {
               });
               test(\\"d is an instance of Error\\", () => {
                   expect(d).toBeInstanceOf(Error);
+              });
+              test(\\"Number.isFinite(3) is truthy\\", () => {
+                  expect(Number.isFinite(3)).toBeTruthy();
+              });
+              test(\\"Number.isFinite(3/0) is falsy\\", () => {
+                  expect(Number.isFinite(3 / 0)).toBeFalsy();
               });
               test(\\"a equals NaN\\", () => {
                   expect(a).toEqual(NaN);
