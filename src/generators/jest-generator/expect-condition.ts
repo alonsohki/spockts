@@ -5,6 +5,8 @@ import { Condition, isTruthyCondition, isFalsyCondition } from '../../processor/
 const parseCondition = (context: ts.TransformationContext, cond: Condition): { title: string; accessor: ts.CallExpression } => {
   const factory = context.factory;
 
+  //---------------------------------------------------------------------------
+  // Helper functions
   const call = (fn: ts.Expression, ...params: ts.Expression[]): ts.CallExpression => factory.createCallExpression(fn, undefined, params);
 
   const expect = (expr: ts.Expression, expected?: ts.Expression, ...properties: string[]): ts.CallExpression => {
@@ -18,6 +20,8 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
 
   const text = (expr: ts.Expression, opName: string, expr2?: ts.Expression) => `${expr.getText()} ${opName}${expr2 ? ` ${expr2.getText()}` : ''}`;
 
+  //---------------------------------------------------------------------------
+  // Check for the straightforward cases: truthy and falsy conditions
   if (isTruthyCondition(cond)) {
     return {
       title: `${cond.expression.getText()} is truthy`,
@@ -30,6 +34,8 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
     };
   }
 
+  //---------------------------------------------------------------------------
+  // Declare the special cases for which Jest has special functions
   type SpecialCase = { check: (expr: ts.Expression) => boolean; text: string; notText: string; fn: string };
   const specialCases: SpecialCase[] = [
     { check: (expr) => expr.kind === ts.SyntaxKind.NullKeyword, text: 'is null', notText: 'is not null', fn: 'toBeNull' },
@@ -43,7 +49,10 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
   ];
   const findSpecialCase = (expr: ts.Expression) => specialCases.find((c) => c.check(expr));
 
-  const strictEquality = (inverse: boolean, defaultText: string, defaultOp: string) => {
+  //---------------------------------------------------------------------------
+  // Helper function for use in the strict equality checks, to handle the
+  // special cases
+  const strictEquality = ({ inverse }: { inverse: boolean }) => {
     const ret = (lhs: ts.Expression, rhs: ts.Expression) => {
       const special = findSpecialCase(rhs);
       return special
@@ -52,8 +61,8 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
             accessor: inverse ? expect(lhs, undefined, 'not', special.fn) : expect(lhs, undefined, special.fn),
           }
         : {
-            title: text(lhs, defaultText, rhs),
-            accessor: inverse ? expect(lhs, rhs, 'not', defaultOp) : expect(lhs, rhs, defaultOp),
+            title: inverse ? text(lhs, 'does not strictly equal', rhs) : text(lhs, 'strictly equals', rhs),
+            accessor: inverse ? expect(lhs, rhs, 'not', 'toStrictEqual') : expect(lhs, rhs, 'toStrictEqual'),
           };
     };
 
@@ -61,6 +70,8 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
     return ret(cond.lhs, cond.rhs);
   };
 
+  //---------------------------------------------------------------------------
+  // Process the known default conditions using Jest's special functions
   switch (cond.op.kind) {
     case ts.SyntaxKind.EqualsEqualsToken:
       return {
@@ -69,7 +80,7 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
       };
 
     case ts.SyntaxKind.EqualsEqualsEqualsToken:
-      return strictEquality(false, 'strictly equals', 'toStrictEqual');
+      return strictEquality({ inverse: false });
 
     case ts.SyntaxKind.ExclamationEqualsToken:
       return {
@@ -78,7 +89,7 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
       };
 
     case ts.SyntaxKind.ExclamationEqualsEqualsToken:
-      return strictEquality(true, 'does not strictly equal', 'toStrictEqual');
+      return strictEquality({ inverse: true });
 
     case ts.SyntaxKind.LessThanToken:
       return {
