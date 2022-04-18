@@ -12,9 +12,15 @@ export type WhenThenBlock = {
   };
 };
 
+export type CleanupInfo = {
+  statements: ts.Statement[];
+  async: boolean;
+};
+
 export type ProcessorOutput = {
   title: ts.StringLiteral;
   setup: SetupBlockInfo;
+  cleanup: CleanupInfo;
   whenThen: WhenThenBlock[];
   state: State;
 };

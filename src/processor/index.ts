@@ -4,7 +4,7 @@ import { createState } from './state';
 import { processLabeledStatement } from './process-labeled-statement';
 import { isSpocktsBlock } from './is-spockts-block';
 import { validate } from './validate';
-import { ProcessorOutput, WhenThenBlock } from './output';
+import { CleanupInfo, ProcessorOutput, WhenThenBlock } from './output';
 import { processSetupBlock } from './process-setup-block';
 import { looksLikeACondition, processCondition } from './conditions';
 
@@ -20,9 +20,13 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
 
   validate(state, context);
 
+  //---------------------------------------------------------------------------
+  // Setup
   const setupBlocks = state.blocks.filter((block) => ['given', 'setup'].includes(block.type as string)).flatMap((block) => block.statements);
   const setup = processSetupBlock(context, setupBlocks);
 
+  //---------------------------------------------------------------------------
+  // When-Then
   const whenThen = state.blocks.reduce((target, when, index) => {
     if (when.type === 'when') {
       const then = state.blocks[index + 1];
@@ -42,9 +46,18 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
     return target;
   }, [] as WhenThenBlock[]);
 
+  //---------------------------------------------------------------------------
+  // Cleanup
+  const cleanupStatements = state.blocks.filter((block) => block.type === 'cleanup').flatMap((block) => block.statements);
+  const cleanup: CleanupInfo = {
+    statements: cleanupStatements,
+    async: cleanupStatements.some((statement) => tsquery(statement, 'AwaitExpression').length > 0),
+  };
+
   return {
     title,
     setup,
+    cleanup,
     whenThen,
     state,
   };

@@ -49,12 +49,14 @@ export const validate = (state: State, context: ts.TransformationContext): void 
     return conditionMet;
   };
 
-  const nonSetupStatements = state.blocks
-    .filter((block) => !['given', 'setup', 'when', 'then'].includes(block.type as string))
-    .flatMap((block) => block.statements);
-  if (nonSetupStatements.some((statement) => hasBlocksMatching(statement, ts.isVariableDeclarationList)))
-    throw new Error(`Only "given", "setup", "when" and "then" blocks can have variable declarations`);
+  const whereStatements = state.blocks.filter((block) => block.type === 'where').flatMap((block) => block.statements);
 
-  if (nonSetupStatements.some((statement) => !ts.isExpressionStatement(statement)))
-    throw new Error(`Only expression statements are allowed in blocks that are not 'given' or 'setup'`);
+  const nonExpressionStatement = whereStatements.find((statement) =>
+    hasBlocksMatching(
+      statement,
+      (node) => node.kind >= ts.SyntaxKind.FirstStatement && node.kind <= ts.SyntaxKind.LastStatement && !ts.isExpressionStatement(node)
+    )
+  );
+
+  if (nonExpressionStatement) throw new Error(`Unexpected non-expression statement in "where" block: ${nonExpressionStatement.getText()}`);
 };

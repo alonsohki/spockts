@@ -2,11 +2,11 @@ import ts from 'typescript';
 
 export type Block = { title?: ts.StringLiteral } & (
   | {
-      type: 'expect' | 'where';
+      type: 'where';
       statements: ts.ExpressionStatement[];
     }
   | {
-      type: 'when' | 'then' | 'setup' | 'given' | 'cleanup';
+      type: 'expect' | 'when' | 'then' | 'setup' | 'given' | 'cleanup';
       statements: ts.Statement[];
     }
   | {

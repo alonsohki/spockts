@@ -18,8 +18,10 @@ const getLabelStatements = <T extends BlockType>(
     switch (type) {
       case 'given':
       case 'setup':
+      case 'cleanup':
       case 'when':
       case 'then':
+      case 'expect':
         return statements as RetType<T>[];
 
       default:
