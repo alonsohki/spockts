@@ -57,8 +57,5 @@
   "files": [
     "dist",
     "README.md"
-  ],
-  "dependencies": {
-    "jisons": "1.0.0"
-  }
+  ]
 }

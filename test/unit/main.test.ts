@@ -34,8 +34,26 @@ describe('Main test', () => {
           });
           let w;
           describe(\\"setting w to 1\\", () => {
+              let $__spockts_thrown: unknown;
+              let $__spockts_thrown_accessed: boolean;
+              const thrown = () => {
+                  $__spockts_thrown_accessed = true;
+                  return $__spockts_thrown;
+              };
+              const $__spockts_thrown_unhandled = () => !$__spockts_thrown_accessed && $__spockts_thrown;
               beforeAll(() => {
-                  w = 1;
+                  try {
+                      $__spockts_thrown_accessed = false;
+                      w = 1;
+                  }
+                  catch ($__err: unknown) {
+                      $__spockts_thrown = $__err;
+                  }
+              });
+              afterAll(() => {
+                  const unhandled = $__spockts_thrown_unhandled();
+                  if (unhandled)
+                      throw unhandled;
               });
               test(\\"w is greater than 0\\", () => {
                   expect(w).toBeGreaterThan(0);

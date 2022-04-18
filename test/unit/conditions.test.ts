@@ -53,11 +53,29 @@ describe('Conditions', () => {
       "describe('My test', () => {
           let a, b, c, d;
           describe(\\"\\", () => {
+              let $__spockts_thrown: unknown;
+              let $__spockts_thrown_accessed: boolean;
+              const thrown = () => {
+                  $__spockts_thrown_accessed = true;
+                  return $__spockts_thrown;
+              };
+              const $__spockts_thrown_unhandled = () => !$__spockts_thrown_accessed && $__spockts_thrown;
               beforeAll(() => {
-                  a = 1;
-                  b = 2;
-                  c = [1, 2, 3];
-                  d = new Error();
+                  try {
+                      $__spockts_thrown_accessed = false;
+                      a = 1;
+                      b = 2;
+                      c = [1, 2, 3];
+                      d = new Error();
+                  }
+                  catch ($__err: unknown) {
+                      $__spockts_thrown = $__err;
+                  }
+              });
+              afterAll(() => {
+                  const unhandled = $__spockts_thrown_unhandled();
+                  if (unhandled)
+                      throw unhandled;
               });
               test(\\"a equals 1\\", () => {
                   expect(a).toEqual(1);

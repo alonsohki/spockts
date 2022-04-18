@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "plugins": [{ "transform": "./src/main.ts", "filePattern": "test/usage/**/*.ts" }]
+    "plugins": [{ "transform": "./src/main.ts", "filePattern": "test/usage/**/*.ts" }],
   },
   "include": [ "test/usage/**/*.ts" ],
 }

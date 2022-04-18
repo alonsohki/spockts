@@ -22,16 +22,52 @@ describe('when-then', () => {
             let a;
             let b;
             describe(\\"\\", () => {
+                let $__spockts_thrown: unknown;
+                let $__spockts_thrown_accessed: boolean;
+                const thrown = () => {
+                    $__spockts_thrown_accessed = true;
+                    return $__spockts_thrown;
+                };
+                const $__spockts_thrown_unhandled = () => !$__spockts_thrown_accessed && $__spockts_thrown;
                 beforeAll(() => {
-                    a = 1;
+                    try {
+                        $__spockts_thrown_accessed = false;
+                        a = 1;
+                    }
+                    catch ($__err: unknown) {
+                        $__spockts_thrown = $__err;
+                    }
+                });
+                afterAll(() => {
+                    const unhandled = $__spockts_thrown_unhandled();
+                    if (unhandled)
+                        throw unhandled;
                 });
                 test(\\"a strictly equals 1\\", () => {
                     expect(a).toStrictEqual(1);
                 });
             });
             describe(\\"\\", () => {
+                let $__spockts_thrown: unknown;
+                let $__spockts_thrown_accessed: boolean;
+                const thrown = () => {
+                    $__spockts_thrown_accessed = true;
+                    return $__spockts_thrown;
+                };
+                const $__spockts_thrown_unhandled = () => !$__spockts_thrown_accessed && $__spockts_thrown;
                 beforeAll(() => {
-                    b = 2;
+                    try {
+                        $__spockts_thrown_accessed = false;
+                        b = 2;
+                    }
+                    catch ($__err: unknown) {
+                        $__spockts_thrown = $__err;
+                    }
+                });
+                afterAll(() => {
+                    const unhandled = $__spockts_thrown_unhandled();
+                    if (unhandled)
+                        throw unhandled;
                 });
                 test(\\"a strictly equals b\\", () => {
                     expect(a).toStrictEqual(b);

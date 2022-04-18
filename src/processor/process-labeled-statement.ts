@@ -53,7 +53,7 @@ const processBlockOfType = (node: ts.LabeledStatement, blockType: BlockType): Bl
     case 'cleanup':
       {
         const data = getLabelStatements(blockType, node);
-        if (data.statements) return { title: data.title, type: blockType, statements: data.statements };
+        if (data) return { title: data.title, type: blockType, statements: data.statements };
       }
       break;
 
@@ -62,7 +62,7 @@ const processBlockOfType = (node: ts.LabeledStatement, blockType: BlockType): Bl
     case 'where':
       {
         const data = getLabelStatements(blockType, node);
-        if (data.statements) return { title: data.title, type: blockType, statements: data.statements };
+        if (data) return { title: data.title, type: blockType, statements: data.statements };
       }
       break;
 
@@ -80,11 +80,12 @@ const processBlock = (node: ts.LabeledStatement, state: State): void => {
 
     const prevBlock = state.blocks[length - 1];
     const block = processBlockOfType(node, prevBlock.type);
-    (prevBlock.statements as any[]).push(...block.statements);
+    if (block) (prevBlock.statements as any[]).push(...block.statements);
     return;
   }
 
-  state.blocks.push(processBlockOfType(node, blockType));
+  const block = processBlockOfType(node, blockType);
+  if (block) state.blocks.push(block);
 };
 
 export const processLabeledStatement = (node: ts.LabeledStatement, state: State) => processBlock(node, state);

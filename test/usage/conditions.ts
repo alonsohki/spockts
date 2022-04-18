@@ -14,6 +14,14 @@ describe('Conditions', () => {
   1 in c
   e instanceof Error
 
+  when: "Exception throwing"
+  let V: any;
+  V!.prop;
+
+  then:
+  thrown() instanceof TypeError
+  thrown().toString() === "TypeError: Cannot read properties of undefined (reading 'prop')"
+
   when: "NaN numbers"
   const nan = 0/0;
 
