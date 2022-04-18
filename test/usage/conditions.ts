@@ -14,6 +14,20 @@ describe('Conditions', () => {
   1 in c
   e instanceof Error
 
+  when: "NaN numbers"
+  const nan = 0/0;
+
+  then:
+  a != NaN
+  NaN != a
+  a !== NaN
+  NaN !== a
+
+  nan == NaN
+  NaN == nan
+  nan === NaN
+  NaN === nan
+
   when: "falsy expressions"
   const n: null = null, u: undefined = undefined, d = true;
 

@@ -20,6 +20,9 @@ describe('Conditions', () => {
 
     d instanceof Error
 
+    a == NaN
+    a === NaN
+
     !a == null
     a == null
     a === null
@@ -82,6 +85,12 @@ describe('Conditions', () => {
               });
               test(\\"d is an instance of Error\\", () => {
                   expect(d).toBeInstanceOf(Error);
+              });
+              test(\\"a equals NaN\\", () => {
+                  expect(a).toEqual(NaN);
+              });
+              test(\\"a is NaN\\", () => {
+                  expect(a).toBeNaN();
               });
               test(\\"!a equals null\\", () => {
                   expect(!a).toEqual(null);
