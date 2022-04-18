@@ -17,7 +17,31 @@ describe('Conditions', () => {
     b > a
     b >= a
     1 in c
+
     d instanceof Error
+
+    !a == null
+    a == null
+    a === null
+    null == a
+    null === a
+
+    a != null
+    a !== null
+    null != a
+    null !== a
+
+    a == undefined
+    a === undefined
+    undefined == a
+    undefined === a
+
+    a != undefined
+    a !== undefined
+    undefined != a
+    undefined !== a
+
+    !a
     `)
     ).toMatchInlineSnapshot(`
       "describe('My test', () => {
@@ -58,6 +82,60 @@ describe('Conditions', () => {
               });
               test(\\"d is an instance of Error\\", () => {
                   expect(d).toBeInstanceOf(Error);
+              });
+              test(\\"!a equals null\\", () => {
+                  expect(!a).toEqual(null);
+              });
+              test(\\"a equals null\\", () => {
+                  expect(a).toEqual(null);
+              });
+              test(\\"a is null\\", () => {
+                  expect(a).toBeNull();
+              });
+              test(\\"null equals a\\", () => {
+                  expect(null).toEqual(a);
+              });
+              test(\\"a is null\\", () => {
+                  expect(a).toBeNull();
+              });
+              test(\\"a does not equal null\\", () => {
+                  expect(a).not.toEqual(null);
+              });
+              test(\\"a is not null\\", () => {
+                  expect(a).not.toBeNull();
+              });
+              test(\\"null does not equal a\\", () => {
+                  expect(null).not.toEqual(a);
+              });
+              test(\\"a is not null\\", () => {
+                  expect(a).not.toBeNull();
+              });
+              test(\\"a equals undefined\\", () => {
+                  expect(a).toEqual(undefined);
+              });
+              test(\\"a is undefined\\", () => {
+                  expect(a).toBeUndefined();
+              });
+              test(\\"undefined equals a\\", () => {
+                  expect(undefined).toEqual(a);
+              });
+              test(\\"a is undefined\\", () => {
+                  expect(a).toBeUndefined();
+              });
+              test(\\"a does not equal undefined\\", () => {
+                  expect(a).not.toEqual(undefined);
+              });
+              test(\\"a is not undefined\\", () => {
+                  expect(a).not.toBeUndefined();
+              });
+              test(\\"undefined does not equal a\\", () => {
+                  expect(undefined).not.toEqual(a);
+              });
+              test(\\"a is not undefined\\", () => {
+                  expect(a).not.toBeUndefined();
+              });
+              test(\\"a is falsy\\", () => {
+                  expect(a).toBeFalsy();
               });
           });
       });

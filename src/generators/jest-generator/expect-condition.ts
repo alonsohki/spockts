@@ -1,22 +1,60 @@
 import ts from 'typescript';
 import { it } from './it';
-import { Condition } from '../../processor/conditions';
+import { Condition, isUnaryCondition } from '../../processor/conditions';
 
 const parseCondition = (context: ts.TransformationContext, cond: Condition): { title: string; accessor: ts.CallExpression } => {
   const factory = context.factory;
 
   const call = (fn: ts.Expression, ...params: ts.Expression[]): ts.CallExpression => factory.createCallExpression(fn, undefined, params);
 
-  const expect = (expr: ts.Expression, expected: ts.Expression, ...properties: string[]): ts.CallExpression => {
+  const expect = (expr: ts.Expression, expected?: ts.Expression, ...properties: string[]): ts.CallExpression => {
     const expectCall: ts.Expression = call(factory.createIdentifier('expect'), expr);
     const propertyAccess = properties.reduce(
       (expr, propertyName) => factory.createPropertyAccessExpression(expr, factory.createIdentifier(propertyName)),
       expectCall
     );
-    return call(propertyAccess, expected);
+    return expected ? call(propertyAccess, expected) : call(propertyAccess);
   };
 
-  const text = (expr: ts.Expression, opName: string, expr2: ts.Expression) => `${expr.getText()} ${opName} ${expr2.getText()}`;
+  const text = (expr: ts.Expression, opName: string, expr2?: ts.Expression) => `${expr.getText()} ${opName}${expr2 ? ` ${expr2.getText()}` : ''}`;
+
+  if (isUnaryCondition(cond)) {
+    return {
+      title: `${cond.operand.getText()} is falsy`,
+      accessor: expect(cond.operand, undefined, 'toBeFalsy'),
+    };
+  }
+
+  type SpecialCase = { check: (expr: ts.Expression) => boolean; text: string; notText: string; fn: string };
+  const specialCases: SpecialCase[] = [
+    { check: (expr) => expr.kind === ts.SyntaxKind.NullKeyword, text: 'is null', notText: 'is not null', fn: 'toBeNull' },
+    {
+      check: (expr) => ts.isIdentifier(expr) && expr.escapedText === 'undefined',
+      text: 'is undefined',
+      notText: 'is not undefined',
+      fn: 'toBeUndefined',
+    },
+    { check: (expr) => ts.isIdentifier(expr) && expr.escapedText === 'NaN', text: 'is NaN', notText: 'is not NaN', fn: 'toBeNaN' },
+  ];
+  const findSpecialCase = (expr: ts.Expression) => specialCases.find((c) => c.check(expr));
+
+  const strictEquality = (inverse: boolean, defaultText: string, defaultOp: string) => {
+    const ret = (lhs: ts.Expression, rhs: ts.Expression) => {
+      const special = findSpecialCase(rhs);
+      return special
+        ? {
+            title: inverse ? text(lhs, special.notText) : text(lhs, special.text),
+            accessor: inverse ? expect(lhs, undefined, 'not', special.fn) : expect(lhs, undefined, special.fn),
+          }
+        : {
+            title: text(lhs, defaultText, rhs),
+            accessor: inverse ? expect(lhs, rhs, 'not', defaultOp) : expect(lhs, rhs, defaultOp),
+          };
+    };
+
+    if (findSpecialCase(cond.lhs) && !findSpecialCase(cond.rhs)) return ret(cond.rhs, cond.lhs);
+    return ret(cond.lhs, cond.rhs);
+  };
 
   switch (cond.op.kind) {
     case ts.SyntaxKind.EqualsEqualsToken:
@@ -26,10 +64,7 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
       };
 
     case ts.SyntaxKind.EqualsEqualsEqualsToken:
-      return {
-        title: text(cond.lhs, 'strictly equals', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'toStrictEqual'),
-      };
+      return strictEquality(false, 'strictly equals', 'toStrictEqual');
 
     case ts.SyntaxKind.ExclamationEqualsToken:
       return {
@@ -38,10 +73,7 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
       };
 
     case ts.SyntaxKind.ExclamationEqualsEqualsToken:
-      return {
-        title: text(cond.lhs, 'does not strictly equal', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'not', 'toStrictEqual'),
-      };
+      return strictEquality(true, 'does not strictly equal', 'toStrictEqual');
 
     case ts.SyntaxKind.LessThanToken:
       return {
@@ -81,15 +113,8 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
 
     default:
       return {
-        title: cond.expression.getText(),
-        accessor: factory.createCallExpression(
-          factory.createPropertyAccessExpression(
-            factory.createCallExpression(factory.createIdentifier('expect'), undefined, [cond.expression]),
-            factory.createIdentifier('toBeTruthy')
-          ),
-          undefined,
-          []
-        ),
+        title: `${cond.expression.getText()} is truthy`,
+        accessor: expect(cond.expression, undefined, 'toBeTruthy'),
       };
   }
 };
