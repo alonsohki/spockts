@@ -13,6 +13,6 @@ export default async (): Promise<Config.InitialOptions> => {
       },
     },
     cache: false,
-    testMatch: ['<rootDir>/test/usage/**/*.ts'],
+    testMatch: ['<rootDir>/test/usage/**/*.test.ts'],
   };
 };

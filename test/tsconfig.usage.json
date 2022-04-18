@@ -3,5 +3,5 @@
   "compilerOptions": {
     "plugins": [{ "transform": "./src/main.ts", "filePattern": "test/usage/**/*.ts" }],
   },
-  "include": [ "test/usage/**/*.ts" ],
+  "include": [ "test/usage/**/*.test.ts" ],
 }

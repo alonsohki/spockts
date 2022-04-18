@@ -12,6 +12,6 @@ export default async (): Promise<Config.InitialOptions> => {
         tsconfig: '<rootDir>/test/tsconfig.unit.json',
       },
     },
-    testMatch: ['<rootDir>/test/unit/**/*.test.ts'],
+    testMatch: ['<rootDir>/test/unit/**/*.spec.ts'],
   };
 };
