@@ -50,10 +50,10 @@ export const validate = (state: State, context: ts.TransformationContext): void 
   };
 
   const nonSetupStatements = state.blocks
-    .filter((block) => !['given', 'setup', 'when'].includes(block.type as string))
+    .filter((block) => !['given', 'setup', 'when', 'then'].includes(block.type as string))
     .flatMap((block) => block.statements);
   if (nonSetupStatements.some((statement) => hasBlocksMatching(statement, ts.isVariableDeclarationList)))
-    throw new Error(`Only 'given', 'setup' and 'when' blocks can have variable declarations`);
+    throw new Error(`Only "given", "setup", "when" and "then" blocks can have variable declarations`);
 
   if (nonSetupStatements.some((statement) => !ts.isExpressionStatement(statement)))
     throw new Error(`Only expression statements are allowed in blocks that are not 'given' or 'setup'`);

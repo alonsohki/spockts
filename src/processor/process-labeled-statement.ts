@@ -15,12 +15,20 @@ const getLabelStatements = <T extends BlockType>(
   if (type === 'and') throw new Error(`Invalid block type 'and' when reading label statements`);
 
   const checkStatements = (statements: ts.Statement[]): RetType<T>[] => {
-    if (type === 'given' || type === 'setup' || type === 'when') return statements as RetType<T>[];
-    const nonExpression = statements.find((statement) => !ts.isExpressionStatement(statement));
-    if (nonExpression) {
-      throw new Error(`Blocks that are not 'given' or 'setup' cannot contain non-expression statements. Found: ${nonExpression.getText()}`);
+    switch (type) {
+      case 'given':
+      case 'setup':
+      case 'when':
+      case 'then':
+        return statements as RetType<T>[];
+
+      default:
+        const nonExpression = statements.find((statement) => !ts.isExpressionStatement(statement));
+        if (nonExpression) {
+          throw new Error(`Blocks of type "${type}" cannot contain non-expression statements. Found: ${nonExpression.getText()}`);
+        }
+        return statements as RetType<T>[];
     }
-    return statements as RetType<T>[];
   };
 
   if (!ts.isBlock(node.parent)) return null;

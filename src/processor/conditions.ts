@@ -49,3 +49,7 @@ export const processCondition = (statement: ts.ExpressionStatement): Condition =
     };
   }
 };
+
+export const looksLikeACondition = (statement: ts.Statement): statement is ts.ExpressionStatement => {
+  return ts.isExpressionStatement(statement);
+};

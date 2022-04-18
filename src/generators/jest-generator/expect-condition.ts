@@ -130,5 +130,6 @@ export const expectCondition = (context: ts.TransformationContext, condition: Co
   const parsedCondition = parseCondition(context, condition);
   const expectExpression = factory.createExpressionStatement(parsedCondition.accessor);
 
-  return it(context, factory.createStringLiteral(parsedCondition.title), false, factory.createBlock([expectExpression], true));
+  const testBlock = factory.createBlock([expectExpression], true);
+  return it(context, factory.createStringLiteral(parsedCondition.title), false, testBlock);
 };

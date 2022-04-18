@@ -6,7 +6,10 @@ import { State } from './state';
 export type WhenThenBlock = {
   title?: ts.StringLiteral;
   when: SetupBlockInfo;
-  then: Condition[];
+  then: {
+    setup: SetupBlockInfo;
+    conditions: Condition[];
+  };
 };
 
 export type ProcessorOutput = {
