@@ -1,17 +1,15 @@
 import ts from 'typescript';
 
-export type Block = { title?: ts.StringLiteral } & (
+export type Block = {
+  readonly title?: ts.StringLiteral;
+} & (
   | {
-      type: 'where';
-      statements: ts.ExpressionStatement[];
+      readonly type: 'where';
+      readonly statements: ts.ExpressionStatement[];
     }
   | {
-      type: 'expect' | 'when' | 'then' | 'setup' | 'given' | 'cleanup';
-      statements: ts.Statement[];
-    }
-  | {
-      type: 'and';
-      statements: never;
+      readonly type: 'expect' | 'when' | 'then' | 'setup' | 'given' | 'cleanup' | 'and';
+      readonly statements: ts.Statement[];
     }
 );
 

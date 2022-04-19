@@ -3,13 +3,17 @@ import { Condition } from './conditions';
 import { SetupBlockInfo } from './process-setup-block';
 import { State } from './state';
 
+export type ThenBlock = {
+  title: ts.StringLiteral;
+  async: boolean;
+  setup: SetupBlockInfo;
+  conditions: Condition[];
+};
+
 export type WhenThenBlock = {
   title?: ts.StringLiteral;
   when: SetupBlockInfo;
-  then: {
-    setup: SetupBlockInfo;
-    conditions: Condition[];
-  };
+  then: ThenBlock[];
 };
 
 export type CleanupInfo = {

@@ -23,10 +23,9 @@ export const validate = (state: State, context: ts.TransformationContext): void 
     }
   };
 
-  if (state.blocks[0].type === 'then')
-    throw new Error(
-      `'${state.blocks[0].type}' is not allowed here; instead, use one of: [setup, given, expect, when, cleanup, where, end-of-method]`
-    );
+  const firstType = state.blocks[0].type;
+  if (firstType === 'then' || firstType === 'and')
+    throw new Error(`'${firstType}' is not allowed here; instead, use one of: [setup, given, expect, when, cleanup, where, end-of-method]`);
 
   validateOrder(['given', 'setup'], ['and', 'expect', 'when', 'cleanup', 'where'], true);
   validateOrder(['when'], ['and', 'then'], false);

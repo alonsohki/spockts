@@ -8,11 +8,12 @@ import { CleanupInfo, ProcessorOutput, WhenThenBlock } from './output';
 import { processSetupBlock } from './process-setup-block';
 import { looksLikeACondition, processCondition } from './conditions';
 import { Block } from './block';
+import { preprocess } from './preprocess';
 
 const processor = (context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): ProcessorOutput | null => {
   if (!isSpocktsBlock(block)) return null;
 
-  const state = createState();
+  let state = createState();
   tsquery(block, 'LabeledStatement:has(Identifier[name=/^(given|setup|when|then|expect|cleanup|where|and)$/])').forEach(
     (labeledStatement: ts.LabeledStatement) => {
       processLabeledStatement(labeledStatement, state);
@@ -20,43 +21,34 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
   );
 
   validate(state, context);
+  state = preprocess(state);
 
   //---------------------------------------------------------------------------
   // Setup
-  const setupBlocks = state.blocks.filter((block) => ['given', 'setup'].includes(block.type as string)).flatMap((block) => block.statements);
+  const setupBlocks = state.blocks.filter((block) => block.type === 'setup').flatMap((block) => block.statements);
   const setup = processSetupBlock(context, setupBlocks);
 
   //---------------------------------------------------------------------------
-  // Transform expect blocks to When-Then
-  const whenThenBlocks: Block[] = state.blocks.flatMap((block) => {
-    if (block.type === 'expect') {
-      return [
-        { type: 'when', title: block.title, statements: [] },
-        { type: 'then', title: undefined, statements: block.statements },
-      ];
-    } else if (block.type === 'when' || block.type === 'then') {
-      return [block];
-    } else {
-      return [];
-    }
-  });
-
-  //---------------------------------------------------------------------------
   // When-Then
-  const whenThen = whenThenBlocks.reduce((target, when, index) => {
-    if (when.type === 'when') {
-      const then = whenThenBlocks[index + 1];
-      if (then.type !== 'then') throw new Error(`Unexpected block type 'then' after a 'when' block`);
-
-      const thenConditions = then.statements.filter((s) => looksLikeACondition(s));
-      const thenStatements = then.statements.filter((s) => !looksLikeACondition(s));
+  const whenThenBlocks = state.blocks.filter((block) => ['when', 'then'].includes(block.type));
+  const whenThen = whenThenBlocks.reduce((target, block, index) => {
+    if (block.type === 'when') {
       target.push({
-        title: when.title,
-        when: processSetupBlock(context, when.statements),
-        then: {
-          setup: processSetupBlock(context, thenStatements),
-          conditions: thenConditions.map(processCondition),
-        },
+        title: block.title,
+        when: processSetupBlock(context, block.statements),
+        then: [],
+      });
+    } else if (block.type === 'then') {
+      const thenConditions = block.statements.filter((s) => looksLikeACondition(s));
+      const thenStatements = block.statements.filter((s) => !looksLikeACondition(s));
+      const conditions = thenConditions.map(processCondition);
+      const async = conditions.some((condition) => condition.async);
+
+      target[target.length - 1].then.push({
+        title: block.title,
+        async,
+        setup: processSetupBlock(context, thenStatements),
+        conditions,
       });
     }
     return target;

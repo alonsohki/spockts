@@ -2,48 +2,52 @@ import ts from 'typescript';
 import { Block, BlockType } from './block';
 import { State } from './state';
 
-type RetType<T extends BlockType> = T extends 'given' | 'setup' | 'when' | 'cleanup'
-  ? ts.Statement
-  : T extends 'and'
-  ? never
-  : ts.ExpressionStatement;
+type BlockInfo<T extends BlockType> = {
+  title?: ts.StringLiteral;
+  statements: RetType<T>[];
+};
 
-const getLabelStatements = <T extends BlockType>(
-  type: T,
-  node: ts.LabeledStatement
-): { title?: ts.StringLiteral; statements: RetType<T>[] } | null => {
-  if (type === 'and') throw new Error(`Invalid block type 'and' when reading label statements`);
+type RetType<T extends BlockType> = T extends 'expect' | 'when' | 'then' | 'setup' | 'given' | 'cleanup' ? ts.Statement : ts.ExpressionStatement;
 
-  const checkStatements = (statements: ts.Statement[]): RetType<T>[] => {
-    switch (type) {
-      case 'given':
-      case 'setup':
-      case 'cleanup':
-      case 'when':
-      case 'then':
-      case 'expect':
-        return statements as RetType<T>[];
+const getLabelStatements = <T extends BlockType>(_type: T, node: ts.LabeledStatement): BlockInfo<T> | null => {
+  // Check for labels followed by labels, which can be considered as empty blocks. For example:
+  //
+  // when:
+  // then:
+  // a + b == c
+  //
+  if (ts.isLabeledStatement(node.statement)) return { statements: [] };
 
-      default:
-        const nonExpression = statements.find((statement) => !ts.isExpressionStatement(statement));
-        if (nonExpression) {
-          throw new Error(`Blocks of type "${type}" cannot contain non-expression statements. Found: ${nonExpression.getText()}`);
-        }
-        return statements as RetType<T>[];
-    }
-  };
+  // There might be a chain of nested labels, such as:
+  //
+  // when:
+  // then:
+  // when:
+  // then:
+  // a + b === c
+  //
+  // In these cases, all the nested labels are considered as child of each other, so we need to iteratively
+  // resolve who is the topmost parent and the immediate child (prev).
+  let parent: ts.Node = node;
+  let prev: ts.Node;
+  do {
+    prev = parent;
+    parent = parent.parent;
+  } while (ts.isLabeledStatement(parent));
 
-  if (!ts.isBlock(node.parent)) return null;
+  // A spockts block should be part of a Block node. Otherwise, something went wrong.
+  if (!ts.isBlock(parent)) return null;
 
-  const parentIndex = node.parent.statements.findIndex((x) => x === node);
-  const nextStatements = node.parent.statements.slice(parentIndex + 1);
+  const parentIndex = parent.statements.findIndex((x) => x === prev);
+  const nextStatements = parent.statements.slice(parentIndex + 1);
   const nextLabel = nextStatements.findIndex((x) => x.kind === ts.SyntaxKind.LabeledStatement);
   const title = (ts.isExpressionStatement(node.statement) && ts.isStringLiteral(node.statement.expression) && node.statement.expression) || undefined;
 
-  const statements = checkStatements([
+  const statements = [
     ...(title ? [] : [node.statement]),
     ...(nextLabel === -1 ? nextStatements : nextStatements.slice(0, nextLabel)),
-  ]);
+  ] as RetType<T>[];
+
   return { title, statements };
 };
 
@@ -53,14 +57,15 @@ const processBlockOfType = (node: ts.LabeledStatement, blockType: BlockType): Bl
     case 'setup':
     case 'when':
     case 'cleanup':
+    case 'then':
+    case 'expect':
+    case 'and':
       {
         const data = getLabelStatements(blockType, node);
         if (data) return { title: data.title, type: blockType, statements: data.statements };
       }
       break;
 
-    case 'then':
-    case 'expect':
     case 'where':
       {
         const data = getLabelStatements(blockType, node);
@@ -75,17 +80,6 @@ const processBlockOfType = (node: ts.LabeledStatement, blockType: BlockType): Bl
 
 const processBlock = (node: ts.LabeledStatement, state: State): void => {
   let blockType = node.label.text as BlockType;
-
-  if (blockType === 'and') {
-    const length = state.blocks.length;
-    if (length === 0) throw new Error(`'and' is not allowed here; instead, use one of: [setup, given, expect, when, cleanup, where, end-of-method]`);
-
-    const prevBlock = state.blocks[length - 1];
-    const block = processBlockOfType(node, prevBlock.type);
-    if (block) (prevBlock.statements as any[]).push(...block.statements);
-    return;
-  }
-
   const block = processBlockOfType(node, blockType);
   if (block) state.blocks.push(block);
 };

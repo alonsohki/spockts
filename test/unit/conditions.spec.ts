@@ -77,100 +77,38 @@ describe('Conditions', () => {
                   if (unhandled)
                       throw unhandled;
               });
-              test(\\"a equals 1\\", () => {
+              test(\\"\\", () => {
                   expect(a).toEqual(1);
-              });
-              test(\\"a strictly equals 1\\", () => {
                   expect(a).toStrictEqual(1);
-              });
-              test(\\"a does not equal b\\", () => {
                   expect(a).not.toEqual(b);
-              });
-              test(\\"a does not strictly equal b\\", () => {
                   expect(a).not.toStrictEqual(b);
-              });
-              test(\\"a is less than b\\", () => {
                   expect(a).toBeLessThan(b);
-              });
-              test(\\"a is less or equal than b\\", () => {
                   expect(a).toBeLessThanOrEqual(b);
-              });
-              test(\\"b is greater than a\\", () => {
                   expect(b).toBeGreaterThan(a);
-              });
-              test(\\"b is greater or equal than a\\", () => {
                   expect(b).toBeGreaterThanOrEqual(a);
-              });
-              test(\\"c contains 1\\", () => {
                   expect(c).toContain(1);
-              });
-              test(\\"d is an instance of Error\\", () => {
                   expect(d).toBeInstanceOf(Error);
-              });
-              test(\\"Number.isFinite(3) is truthy\\", () => {
                   expect(Number.isFinite(3)).toBeTruthy();
-              });
-              test(\\"Number.isFinite(3/0) is falsy\\", () => {
                   expect(Number.isFinite(3 / 0)).toBeFalsy();
-              });
-              test(\\"a equals NaN\\", () => {
                   expect(a).toEqual(NaN);
-              });
-              test(\\"a is NaN\\", () => {
                   expect(a).toBeNaN();
-              });
-              test(\\"!a equals null\\", () => {
                   expect(!a).toEqual(null);
-              });
-              test(\\"a equals null\\", () => {
                   expect(a).toEqual(null);
-              });
-              test(\\"a is null\\", () => {
                   expect(a).toBeNull();
-              });
-              test(\\"null equals a\\", () => {
                   expect(null).toEqual(a);
-              });
-              test(\\"a is null\\", () => {
                   expect(a).toBeNull();
-              });
-              test(\\"a does not equal null\\", () => {
                   expect(a).not.toEqual(null);
-              });
-              test(\\"a is not null\\", () => {
                   expect(a).not.toBeNull();
-              });
-              test(\\"null does not equal a\\", () => {
                   expect(null).not.toEqual(a);
-              });
-              test(\\"a is not null\\", () => {
                   expect(a).not.toBeNull();
-              });
-              test(\\"a equals undefined\\", () => {
                   expect(a).toEqual(undefined);
-              });
-              test(\\"a is undefined\\", () => {
                   expect(a).toBeUndefined();
-              });
-              test(\\"undefined equals a\\", () => {
                   expect(undefined).toEqual(a);
-              });
-              test(\\"a is undefined\\", () => {
                   expect(a).toBeUndefined();
-              });
-              test(\\"a does not equal undefined\\", () => {
                   expect(a).not.toEqual(undefined);
-              });
-              test(\\"a is not undefined\\", () => {
                   expect(a).not.toBeUndefined();
-              });
-              test(\\"undefined does not equal a\\", () => {
                   expect(undefined).not.toEqual(a);
-              });
-              test(\\"a is not undefined\\", () => {
                   expect(a).not.toBeUndefined();
-              });
-              test(\\"a is falsy\\", () => {
                   expect(a).toBeFalsy();
               });
           });

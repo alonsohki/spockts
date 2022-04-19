@@ -43,7 +43,7 @@ describe('when-then', () => {
                     if (unhandled)
                         throw unhandled;
                 });
-                test(\\"a strictly equals 1\\", () => {
+                test(\\"\\", () => {
                     expect(a).toStrictEqual(1);
                 });
             });
@@ -69,7 +69,7 @@ describe('when-then', () => {
                     if (unhandled)
                         throw unhandled;
                 });
-                test(\\"a strictly equals b\\", () => {
+                test(\\"\\", () => {
                     expect(a).toStrictEqual(b);
                 });
             });

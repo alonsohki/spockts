@@ -1,8 +1,12 @@
 import ts from 'typescript';
-import { it } from './it';
 import { Condition, isTruthyCondition, isFalsyCondition } from '../../processor/conditions';
 
-const parseCondition = (context: ts.TransformationContext, cond: Condition): { title: string; accessor: ts.CallExpression } => {
+export type TransformedCondition = {
+  title: string;
+  expression: ts.CallExpression;
+};
+
+export const transformCondition = (context: ts.TransformationContext, cond: Condition): TransformedCondition => {
   const factory = context.factory;
 
   //---------------------------------------------------------------------------
@@ -25,12 +29,12 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
   if (isTruthyCondition(cond)) {
     return {
       title: `${cond.expression.getText()} is truthy`,
-      accessor: expect(cond.expression, undefined, 'toBeTruthy'),
+      expression: expect(cond.expression, undefined, 'toBeTruthy'),
     };
   } else if (isFalsyCondition(cond)) {
     return {
       title: `${cond.operand.getText()} is falsy`,
-      accessor: expect(cond.operand, undefined, 'toBeFalsy'),
+      expression: expect(cond.operand, undefined, 'toBeFalsy'),
     };
   }
 
@@ -53,16 +57,16 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
   // Helper function for use in the strict equality checks, to handle the
   // special cases
   const strictEquality = ({ inverse }: { inverse: boolean }) => {
-    const ret = (lhs: ts.Expression, rhs: ts.Expression) => {
+    const ret = (lhs: ts.Expression, rhs: ts.Expression): TransformedCondition => {
       const special = findSpecialCase(rhs);
       return special
         ? {
             title: inverse ? text(lhs, special.notText) : text(lhs, special.text),
-            accessor: inverse ? expect(lhs, undefined, 'not', special.fn) : expect(lhs, undefined, special.fn),
+            expression: inverse ? expect(lhs, undefined, 'not', special.fn) : expect(lhs, undefined, special.fn),
           }
         : {
             title: inverse ? text(lhs, 'does not strictly equal', rhs) : text(lhs, 'strictly equals', rhs),
-            accessor: inverse ? expect(lhs, rhs, 'not', 'toStrictEqual') : expect(lhs, rhs, 'toStrictEqual'),
+            expression: inverse ? expect(lhs, rhs, 'not', 'toStrictEqual') : expect(lhs, rhs, 'toStrictEqual'),
           };
     };
 
@@ -76,7 +80,7 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
     case ts.SyntaxKind.EqualsEqualsToken:
       return {
         title: text(cond.lhs, 'equals', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'toEqual'),
+        expression: expect(cond.lhs, cond.rhs, 'toEqual'),
       };
 
     case ts.SyntaxKind.EqualsEqualsEqualsToken:
@@ -85,7 +89,7 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
     case ts.SyntaxKind.ExclamationEqualsToken:
       return {
         title: text(cond.lhs, 'does not equal', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'not', 'toEqual'),
+        expression: expect(cond.lhs, cond.rhs, 'not', 'toEqual'),
       };
 
     case ts.SyntaxKind.ExclamationEqualsEqualsToken:
@@ -94,53 +98,43 @@ const parseCondition = (context: ts.TransformationContext, cond: Condition): { t
     case ts.SyntaxKind.LessThanToken:
       return {
         title: text(cond.lhs, 'is less than', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'toBeLessThan'),
+        expression: expect(cond.lhs, cond.rhs, 'toBeLessThan'),
       };
 
     case ts.SyntaxKind.LessThanEqualsToken:
       return {
         title: text(cond.lhs, 'is less or equal than', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'toBeLessThanOrEqual'),
+        expression: expect(cond.lhs, cond.rhs, 'toBeLessThanOrEqual'),
       };
 
     case ts.SyntaxKind.GreaterThanToken:
       return {
         title: text(cond.lhs, 'is greater than', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'toBeGreaterThan'),
+        expression: expect(cond.lhs, cond.rhs, 'toBeGreaterThan'),
       };
 
     case ts.SyntaxKind.GreaterThanEqualsToken:
       return {
         title: text(cond.lhs, 'is greater or equal than', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'toBeGreaterThanOrEqual'),
+        expression: expect(cond.lhs, cond.rhs, 'toBeGreaterThanOrEqual'),
       };
 
     case ts.SyntaxKind.InstanceOfKeyword:
       return {
         title: text(cond.lhs, 'is an instance of', cond.rhs),
-        accessor: expect(cond.lhs, cond.rhs, 'toBeInstanceOf'),
+        expression: expect(cond.lhs, cond.rhs, 'toBeInstanceOf'),
       };
 
     case ts.SyntaxKind.InKeyword:
       return {
         title: text(cond.rhs, 'contains', cond.lhs),
-        accessor: expect(cond.rhs, cond.lhs, 'toContain'),
+        expression: expect(cond.rhs, cond.lhs, 'toContain'),
       };
 
     default:
       return {
         title: `${cond.expression.getText()} is truthy`,
-        accessor: expect(cond.expression, undefined, 'toBeTruthy'),
+        expression: expect(cond.expression, undefined, 'toBeTruthy'),
       };
   }
-};
-
-export const expectCondition = (context: ts.TransformationContext, condition: Condition): ts.ExpressionStatement => {
-  const factory = context.factory;
-
-  const parsedCondition = parseCondition(context, condition);
-  const expectExpression = factory.createExpressionStatement(parsedCondition.accessor);
-
-  const testBlock = factory.createBlock([expectExpression], true);
-  return it(context, factory.createStringLiteral(parsedCondition.title), condition.async, testBlock);
 };

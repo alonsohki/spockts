@@ -81,10 +81,8 @@ describe('Setup', () => {
       ).toMatchInlineSnapshot(`
         "describe('My test', () => {
             let x: number;
-            let y: number;
             beforeAll(() => {
                 x = 1;
-                y = 1;
             });
         });
         "

@@ -2,7 +2,7 @@ describe('Conditions', async () => {
   when: "value expressions"
   const a = 1, b = 2, c = [1, 2, 3], e = new Error();
 
-  then:
+  then: "passes all conditions"
   a == 1
   a === 1
   a != a + 1
@@ -18,14 +18,14 @@ describe('Conditions', async () => {
   let V: any;
   V!.prop;
 
-  then:
+  then: "exceptions are caught"
   thrown() instanceof TypeError
   thrown().toString() === "TypeError: Cannot read properties of undefined (reading 'prop')"
 
   when: "NaN numbers"
   const nan = 0/0;
 
-  then:
+  then: "passes all conditions"
   a != NaN
   NaN != a
   a !== NaN
@@ -37,14 +37,14 @@ describe('Conditions', async () => {
   NaN === nan
 
   when: "truthy expressions"
-  then:
+  then: "passes all conditions"
   Number.isFinite(3)
   !Number.isFinite(3/0)
 
   when: "falsy expressions"
   const n: null = null, u: undefined = undefined, d = true;
 
-  then:
+  then: "passes all conditions"
   n == null
   n === null
   null == n
@@ -77,13 +77,7 @@ describe('Conditions', async () => {
   const asyncFn = async() => Promise.resolve(42);
   const p = await asyncFn();
 
-  then:
+  then: "passes all conditions"
   await asyncFn() === 42
   p === 42
-
-  expect: "Expect blocks"
-  b < 90000
-
-  and:
-  b < 90001
 });
