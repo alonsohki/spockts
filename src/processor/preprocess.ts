@@ -22,11 +22,13 @@ const and = (block: Block, _oldState: ReadonlyArray<Block>, _index: number, newS
   } as Block;
 };
 
-type PreProcessorMap = {
-  [K in BlockType]?: (block: Block, _oldState: ReadonlyArray<Block>, index: number, newState: ReadonlyArray<Block>) => Block | Block[];
-};
-
 export const preprocess = (state: State): State => {
+  type PreProcessor = (block: Block, oldState: ReadonlyArray<Block>, index: number, newState: ReadonlyArray<Block>) => Block | Block[];
+
+  type PreProcessorMap = {
+    [K in BlockType]?: PreProcessor;
+  };
+
   const preprocessors: PreProcessorMap = {
     given,
     expect,
