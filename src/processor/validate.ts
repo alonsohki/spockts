@@ -40,7 +40,7 @@ export const validate = (state: State, context: ts.TransformationContext): void 
   getBlockTypes(state.blocks, (type, next) => {
     const ordering = orderingTable[type];
     if (ordering && !ordering.includes(next)) {
-      throw new Error(`'${next}' is not allowed here; instead, use one of: [setup, given, expect, when, cleanup, where, end-of-method]`);
+      throw new Error(`'${next}' is not allowed here; instead, use one of: [and, ${ordering.join(', ')}]`);
     }
   });
 
