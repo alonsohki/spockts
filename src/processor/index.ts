@@ -5,7 +5,7 @@ import { processLabeledStatement } from './process-labeled-statement';
 import { isSpocktsBlock } from './is-spockts-block';
 import { validate } from './validate';
 import { CleanupInfo, ProcessorOutput, WhenThenBlock } from './output';
-import { processSetupBlock } from './process-setup-block';
+import { mergeSetupBlocks, processSetupBlock } from './process-setup-block';
 import { looksLikeACondition, processCondition } from './conditions';
 import { Block } from './block';
 import { preprocess } from './preprocess';
@@ -33,11 +33,17 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
   const whenThenBlocks = state.blocks.filter((block) => ['when', 'then'].includes(block.type));
   const whenThen = whenThenBlocks.reduce((target, block, index) => {
     if (block.type === 'when') {
-      target.push({
-        title: block.title,
-        when: processSetupBlock(context, block.statements),
-        then: [],
-      });
+      if (index > 0 && whenThenBlocks[index - 1].type === 'when') {
+        // This was originally an 'and' block
+        const prev = target[target.length - 1];
+        prev.when = mergeSetupBlocks(prev.when, processSetupBlock(context, block.statements));
+      } else {
+        target.push({
+          title: block.title,
+          when: processSetupBlock(context, block.statements),
+          then: [],
+        });
+      }
     } else if (block.type === 'then') {
       const thenConditions = block.statements.filter((s) => looksLikeACondition(s));
       const thenStatements = block.statements.filter((s) => !looksLikeACondition(s));

@@ -78,4 +78,57 @@ describe('when-then', () => {
       `);
     });
   });
+
+  describe('when combining when-then with and', () => {
+    it('should produce the expected output', () => {
+      expect(
+        transpile(`
+      when:
+      const a = 1;
+      and:
+      const b = 2;
+      then:
+      a < b
+      and:
+      b > a
+      `)
+      ).toMatchInlineSnapshot(`
+        "describe('My test', () => {
+            let a;
+            let b;
+            describe(\\"\\", () => {
+                let $__spockts_thrown: unknown;
+                let $__spockts_thrown_accessed: boolean;
+                const thrown = () => {
+                    $__spockts_thrown_accessed = true;
+                    return $__spockts_thrown;
+                };
+                const $__spockts_thrown_unhandled = () => !$__spockts_thrown_accessed && $__spockts_thrown;
+                beforeAll(() => {
+                    try {
+                        $__spockts_thrown_accessed = false;
+                        a = 1;
+                        b = 2;
+                    }
+                    catch ($__err: unknown) {
+                        $__spockts_thrown = $__err;
+                    }
+                });
+                afterAll(() => {
+                    const unhandled = $__spockts_thrown_unhandled();
+                    if (unhandled)
+                        throw unhandled;
+                });
+                test(\\"\\", () => {
+                    expect(a).toBeLessThan(b);
+                });
+                test(\\"\\", () => {
+                    expect(b).toBeGreaterThan(a);
+                });
+            });
+        });
+        "
+      `);
+    });
+  });
 });

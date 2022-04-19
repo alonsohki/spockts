@@ -125,3 +125,11 @@ export const processSetupBlock = (context: ts.TransformationContext, statements:
 
   return info;
 };
+
+export const mergeSetupBlocks = (a: SetupBlockInfo, b: SetupBlockInfo): SetupBlockInfo => {
+  return {
+    declarations: [...a.declarations, ...b.declarations],
+    statements: [...a.statements, ...b.statements],
+    async: a.async || b.async,
+  };
+};
