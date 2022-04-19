@@ -37,4 +37,39 @@ describe('Spockts', () => {
       `);
     });
   });
+
+  describe('when there are empty labels', () => {
+    it('should parse them correctly', () => {
+      expect(
+        transpile(`
+      given:
+      and:
+      when:
+      then:
+      1 + 1
+      cleanup:
+      and:
+      cleanup();`)
+      ).toMatchInlineSnapshot(`
+        "describe('My test', () => {
+            afterAll(() => {
+                cleanup();
+            });
+            describe(\\"\\", () => {
+                let $__spockts_thrown: unknown;
+                let $__spockts_thrown_accessed: boolean;
+                const thrown = () => {
+                    $__spockts_thrown_accessed = true;
+                    return $__spockts_thrown;
+                };
+                const $__spockts_thrown_unhandled = () => !$__spockts_thrown_accessed && $__spockts_thrown;
+                test(\\"\\", () => {
+                    expect(1 + 1).toBeTruthy();
+                });
+            });
+        });
+        "
+      `);
+    });
+  });
 });

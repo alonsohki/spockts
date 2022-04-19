@@ -1,39 +1,51 @@
 import ts from 'typescript';
-import { BlockType } from './block';
+import { Block, BlockType } from './block';
 import { State } from './state';
 
 export const validate = (state: State, context: ts.TransformationContext): void => {
   if (state.blocks.length === 0) return;
 
-  const findNotFollowedBy = (types: BlockType[], followedBy: BlockType[], acceptEndOfMethod: boolean) => {
-    const idx = state.blocks.findIndex(
-      (block, index, blocks) =>
-        types.some((t) => t === block.type) &&
-        ((blocks.length <= index + 1 && !acceptEndOfMethod) || (blocks.length > index + 1 && !followedBy.some((t) => t === blocks[index + 1].type)))
-    );
-
-    return idx !== -1 ? [state.blocks[idx], state.blocks[idx + 1]] : [];
-  };
-
-  const validateOrder = (check: BlockType[], followedBy: BlockType[], acceptEndOfMethod: boolean) => {
-    const [block, follower] = findNotFollowedBy(check, followedBy, acceptEndOfMethod);
-    if (block) {
-      const allowedStr = `[${followedBy.join(', ') + (acceptEndOfMethod ? ', end-of-method' : '')}]`;
-      throw new Error(`'${follower?.type || 'end-of-method'}' is not allowed here; instead, use one of: ${allowedStr}`);
-    }
-  };
-
+  //
+  // Check that the first type is not 'then' or 'and'
   const firstType = state.blocks[0].type;
   if (firstType === 'then' || firstType === 'and')
     throw new Error(`'${firstType}' is not allowed here; instead, use one of: [setup, given, expect, when, cleanup, where, end-of-method]`);
 
-  validateOrder(['given', 'setup'], ['and', 'expect', 'when', 'cleanup', 'where'], true);
-  validateOrder(['when'], ['and', 'then'], false);
-  validateOrder(['then'], ['and', 'expect', 'when', 'then', 'cleanup', 'where'], true);
-  validateOrder(['expect'], ['and', 'when', 'cleanup', 'where'], true);
-  validateOrder(['cleanup'], ['and', 'where'], true);
-  validateOrder(['where', 'and'], ['and'], true);
+  //
+  // Guarantee the correct ordering of blocks
+  type OrderingMap = { [K in BlockType]?: (BlockType | 'end-of-method')[] };
+  const orderingTable: OrderingMap = {
+    given: ['expect', 'when', 'cleanup', 'where', 'end-of-method'],
+    setup: ['expect', 'when', 'cleanup', 'where', 'end-of-method'],
+    when: ['then'],
+    then: ['expect', 'when', 'then', 'cleanup', 'where', 'end-of-method'],
+    expect: ['when', 'cleanup', 'where', 'end-of-method'],
+    cleanup: ['where', 'end-of-method'],
+    where: ['end-of-method'],
+  };
 
+  const getBlockTypes = (blocks: Block[], fn: (type: BlockType, next: BlockType | 'end-of-method') => void) => {
+    if (blocks.length > 0) {
+      let prev = blocks[0].type;
+      for (let index = 1; index < blocks.length; ++index) {
+        let next = blocks[index].type;
+        if (next === 'and') continue;
+        fn(prev, next);
+        prev = next;
+      }
+      fn(prev, 'end-of-method');
+    }
+  };
+
+  getBlockTypes(state.blocks, (type, next) => {
+    const ordering = orderingTable[type];
+    if (ordering && !ordering.includes(next)) {
+      throw new Error(`'${next}' is not allowed here; instead, use one of: [setup, given, expect, when, cleanup, where, end-of-method]`);
+    }
+  });
+
+  //
+  // Check whether the where blocks only contain expression statements
   const hasBlocksMatching = (root: ts.Node, predicate: (node: ts.Node) => boolean): boolean => {
     let conditionMet = false;
     const visitor = (node: ts.Node): ts.Node => {
@@ -49,7 +61,6 @@ export const validate = (state: State, context: ts.TransformationContext): void 
   };
 
   const whereStatements = state.blocks.filter((block) => block.type === 'where').flatMap((block) => block.statements);
-
   const nonExpressionStatement = whereStatements.find((statement) =>
     hasBlocksMatching(
       statement,
