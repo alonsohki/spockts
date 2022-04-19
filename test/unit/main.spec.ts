@@ -44,16 +44,20 @@ describe('Spockts', () => {
         transpile(`
       given:
       and:
+      and:
       when:
       then:
       1 + 1
       cleanup:
       and:
-      cleanup();`)
+      cleanup();
+      and:
+      moreCleanup();`)
       ).toMatchInlineSnapshot(`
         "describe('My test', () => {
             afterAll(() => {
                 cleanup();
+                moreCleanup();
             });
             describe(\\"\\", () => {
                 let $__spockts_thrown: unknown;

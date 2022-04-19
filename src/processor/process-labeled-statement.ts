@@ -62,14 +62,14 @@ const processBlockOfType = (node: ts.LabeledStatement, blockType: BlockType): Bl
     case 'and':
       {
         const data = getLabelStatements(blockType, node);
-        if (data) return { title: data.title, type: blockType, statements: data.statements };
+        if (data) return { type: blockType, title: data.title, statements: data.statements };
       }
       break;
 
     case 'where':
       {
         const data = getLabelStatements(blockType, node);
-        if (data) return { title: data.title, type: blockType, statements: data.statements };
+        if (data) return { type: blockType, title: data.title, statements: data.statements };
       }
       break;
 

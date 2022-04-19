@@ -1,7 +1,7 @@
 import { Block, BlockType } from './block';
 import { State } from './state';
 
-const expect = (block: Block, _state: State, _index: number): Block | Block[] => {
+const expect = (block: Block): Block[] => {
   //---------------------------------------------------------------------------
   // Transform expect blocks to When-Then
   return [
@@ -10,20 +10,20 @@ const expect = (block: Block, _state: State, _index: number): Block | Block[] =>
   ];
 };
 
-const given = (block: Block, _state: State, _index: number): Block | Block[] => {
+const given = (block: Block): Block => {
   return { type: 'setup', title: block.title, statements: block.statements };
 };
 
-const and = (block: Block, state: State, index: number): Block | Block[] => {
+const and = (block: Block, _oldState: ReadonlyArray<Block>, _index: number, newState: ReadonlyArray<Block>): Block => {
   return {
-    type: state.blocks[index - 1].type,
+    type: newState[newState.length - 1].type,
     title: block.title,
     statements: block.statements,
   } as Block;
 };
 
 type PreProcessorMap = {
-  [K in BlockType]?: (block: Block, state: State, index: number) => Block | Block[];
+  [K in BlockType]?: (block: Block, _oldState: ReadonlyArray<Block>, index: number, newState: ReadonlyArray<Block>) => Block | Block[];
 };
 
 export const preprocess = (state: State): State => {
@@ -33,10 +33,14 @@ export const preprocess = (state: State): State => {
     and,
   };
 
+  const newBlocks = state.blocks.reduce((newState, block, index, oldState) => {
+    const preprocessor = preprocessors[block.type];
+    const newBlocks = preprocessor ? preprocessor(block, oldState, index, newState) : block;
+    newState.push(...(Array.isArray(newBlocks) ? newBlocks : [newBlocks]));
+    return newState;
+  }, [] as Block[]);
+
   return {
-    blocks: state.blocks.flatMap((block, index) => {
-      const preprocessor = preprocessors[block.type];
-      return preprocessor ? preprocessor(block, state, index) : block;
-    }),
+    blocks: newBlocks,
   };
 };
