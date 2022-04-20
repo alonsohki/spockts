@@ -1,3 +1,5 @@
+import { tsquery } from '@phenomnomnominal/tsquery';
+import ts from 'typescript';
 import { transpile } from './utils';
 
 describe('Spockts', () => {
@@ -69,6 +71,41 @@ describe('Spockts', () => {
                 const $__spockts_thrown_unhandled = () => !$__spockts_thrown_accessed && $__spockts_thrown;
                 test(\\"\\", () => {
                     expect(1 + 1).toBeTruthy();
+                });
+            });
+        });
+        "
+      `);
+    });
+  });
+
+  describe('when nesting describe blocks', () => {
+    it('should parse only the inner describe', () => {
+      expect(
+        transpile(
+          `
+        describe('outer', () => {
+          describe('inner', () => {
+            expect: "Additions sum" 1 + 1;
+          })
+        });
+        `,
+          false
+        )
+      ).toMatchInlineSnapshot(`
+        "describe('outer', () => {
+            describe('inner', () => {
+                describe(\\"\\", () => {
+                    let $__spockts_thrown: unknown;
+                    let $__spockts_thrown_accessed: boolean;
+                    const thrown = () => {
+                        $__spockts_thrown_accessed = true;
+                        return $__spockts_thrown;
+                    };
+                    const $__spockts_thrown_unhandled = () => !$__spockts_thrown_accessed && $__spockts_thrown;
+                    test(\\"Additions sum\\", () => {
+                        expect(1 + 1).toBeTruthy();
+                    });
                 });
             });
         });
