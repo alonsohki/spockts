@@ -1,5 +1,3 @@
-import { tsquery } from '@phenomnomnominal/tsquery';
-import ts from 'typescript';
 import { transpile } from './utils';
 
 describe('Spockts', () => {

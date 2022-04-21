@@ -4,7 +4,7 @@ import { Framework } from '../frameworks';
 import jest from './jest-parser';
 
 export type ParserCallback = {
-  (title: ts.StringLiteral, block: ts.Block): ts.Node | undefined;
+  (title: ts.StringLiteral, block: ts.Block, node: ts.Node): ts.Node | undefined;
 };
 
 export type Parser = {

@@ -23,5 +23,8 @@ export default (_program: ts.Program, options?: Options): ts.TransformerFactory<
     const parser = parsers[framework];
     const generator = generators[framework];
 
-    return parser(sourceFile, context, (title, block) => generator(context, processor(context, title, block)));
+    return parser(sourceFile, context, (title, block, node) => {
+      const processorOutput = processor(context, title, block);
+      return processorOutput ? generator(context, processorOutput, node) : node;
+    });
   };
