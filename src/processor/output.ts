@@ -21,10 +21,15 @@ export type CleanupInfo = {
   async: boolean;
 };
 
+export type WhereInfo = {
+  cases: Record<string, ts.Expression>[];
+};
+
 export type ProcessorOutput = {
   title: ts.StringLiteral;
   setup: SetupBlockInfo;
   cleanup: CleanupInfo;
   whenThen: WhenThenBlock[];
+  where: WhereInfo;
   state: State;
 };

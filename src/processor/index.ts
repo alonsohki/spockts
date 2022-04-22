@@ -4,7 +4,7 @@ import { createState } from './state';
 import { processLabeledStatement } from './process-labeled-statement';
 import { isSpocktsBlock } from './is-spockts-block';
 import { validate } from './validate';
-import { CleanupInfo, ProcessorOutput, WhenThenBlock } from './output';
+import { CleanupInfo, ProcessorOutput, WhenThenBlock, WhereInfo } from './output';
 import { mergeSetupBlocks, processSetupBlock } from './process-setup-block';
 import { looksLikeACondition, processCondition } from './conditions';
 import { Block } from './block';
@@ -68,11 +68,20 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
     async: cleanupStatements.some((statement) => tsquery(statement, 'AwaitExpression').length > 0),
   };
 
+  //---------------------------------------------------------------------------
+  // Where
+  const factory = context.factory;
+  const whereBlocks = state.blocks.filter((block) => block.type === 'where');
+  const where: WhereInfo = {
+    cases: [],
+  };
+
   return {
     title,
     setup,
     cleanup,
     whenThen,
+    where,
     state,
   };
 };

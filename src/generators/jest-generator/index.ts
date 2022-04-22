@@ -4,6 +4,7 @@ import { Generator } from '..';
 import { ProcessorOutput } from '../../processor/output';
 import { afterAll } from './after-all';
 import { beforeAll } from './before-all';
+import { describeEach } from './describe-each';
 import { whenThen } from './when-then';
 
 const generator: Generator = (context: ts.TransformationContext, input: ProcessorOutput, callExpression: ts.CallExpression): ts.Node => {
@@ -22,19 +23,19 @@ const generator: Generator = (context: ts.TransformationContext, input: Processo
     true
   );
 
-  const newArrowFunction = factory.createArrowFunction(
-    arrowFunction.modifiers?.filter((m) => m.kind !== ts.SyntaxKind.AsyncKeyword),
-    arrowFunction.typeParameters,
-    arrowFunction.parameters,
-    arrowFunction.type,
-    arrowFunction.equalsGreaterThanToken,
-    newBlock
-  );
-
+  const newCallExpression = describeEach(context, callExpression, input.where);
   const visitor = (node: ts.Node): ts.Node => {
-    return node === arrowFunction ? newArrowFunction : ts.visitEachChild(node, visitor, context);
+    if (!ts.isArrowFunction(node)) return ts.visitEachChild(node, visitor, context);
+    return factory.createArrowFunction(
+      node.modifiers?.filter((m) => m.kind !== ts.SyntaxKind.AsyncKeyword),
+      node.typeParameters,
+      node.parameters,
+      node.type,
+      node.equalsGreaterThanToken,
+      newBlock
+    );
   };
-  return ts.visitNode(callExpression, visitor);
+  return ts.visitNode(newCallExpression, visitor);
 };
 
 export default generator;
