@@ -14,9 +14,4 @@ const generators: GeneratorRecord = {
   jest,
 };
 
-const wrap = (record: GeneratorRecord): GeneratorRecord =>
-  Object.fromEntries(
-    Object.entries(record).map(([key, value]) => [key, (context, input, node) => input && value(context, input, node)])
-  ) as GeneratorRecord;
-
-export default wrap(generators);
+export default generators;
