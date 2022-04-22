@@ -1,10 +1,8 @@
 import ts from 'typescript';
 import minimatch from 'minimatch';
-import parsers from './parsers';
 import path from 'path';
 import processor from './processor';
-import generators from './generators';
-import { Framework, getDefaultFramework, getKnownFrameworks, isKnownFramework } from './frameworks';
+import { Framework, getDefaultFramework, getFrameworkSpec, getKnownFrameworks, isKnownFramework } from './frameworks';
 import { Options } from './options';
 
 export default (_program: ts.Program, options?: Options): ts.TransformerFactory<ts.SourceFile> =>
@@ -18,13 +16,12 @@ export default (_program: ts.Program, options?: Options): ts.TransformerFactory<
 
     if (options?.framework && !isKnownFramework(options.framework))
       throw new Error(`Unknown framework: "${options.framework}". Possible frameworks are: "${getKnownFrameworks().join('", "')}"`);
+
     const framework = (options?.framework as Framework) || getDefaultFramework();
+    const spec = getFrameworkSpec(framework);
 
-    const parser = parsers[framework];
-    const generator = generators[framework];
-
-    return parser(sourceFile, context, (title, block, node) => {
+    return spec.parser(sourceFile, context, (title, block, node) => {
       const processorOutput = processor(context, title, block);
-      return processorOutput ? generator(context, processorOutput, node) : node;
+      return processorOutput ? spec.generator(context, processorOutput, node) : node;
     });
   };

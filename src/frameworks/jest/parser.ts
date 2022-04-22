@@ -1,6 +1,6 @@
 import ts, { VisitResult } from 'typescript';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { Parser, ParserCallback } from '../parsers';
+import { Parser, ParserCallback } from '..';
 
 const parser: Parser = (sourceFile: ts.SourceFile, context: ts.TransformationContext, callback: ParserCallback): ts.SourceFile => {
   const callExpressionCb = (callExpression: ts.CallExpression) => {
