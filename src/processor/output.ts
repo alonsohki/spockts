@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import { Condition } from './conditions';
 import { SetupBlockInfo } from './process-setup-block';
-import { State } from './state';
 
 export type ThenBlock = {
   title: ts.StringLiteral;
@@ -31,5 +30,4 @@ export type ProcessorOutput = {
   cleanup: CleanupInfo;
   whenThen: WhenThenBlock[];
   where: WhereInfo;
-  state: State;
 };
