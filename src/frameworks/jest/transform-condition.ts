@@ -1,28 +1,70 @@
 import ts from 'typescript';
-import { Condition, isTruthyCondition, isFalsyCondition } from '../../processor/conditions';
+import { Condition, isTruthyCondition, isFalsyCondition, BinaryCondition } from '../../processor/conditions';
 
 export type TransformedCondition = {
   title: string;
   expression: ts.CallExpression;
 };
 
-export const transformCondition = (context: ts.TransformationContext, cond: Condition): TransformedCondition => {
-  const factory = context.factory;
+//---------------------------------------------------------------------------
+// Helper functions
+const call = (context: ts.TransformationContext, fn: ts.Expression, ...params: ts.Expression[]): ts.CallExpression =>
+  context.factory.createCallExpression(fn, undefined, params);
 
-  //---------------------------------------------------------------------------
-  // Helper functions
-  const call = (fn: ts.Expression, ...params: ts.Expression[]): ts.CallExpression => factory.createCallExpression(fn, undefined, params);
-
-  const expect = (expr: ts.Expression, expected?: ts.Expression, ...properties: string[]): ts.CallExpression => {
-    const expectCall: ts.Expression = call(factory.createIdentifier('expect'), expr);
+const createExpect =
+  (context: ts.TransformationContext) =>
+  (expr: ts.Expression, expected?: ts.Expression, ...properties: string[]): ts.CallExpression => {
+    const factory = context.factory;
+    const expectCall: ts.Expression = call(context, factory.createIdentifier('expect'), expr);
     const propertyAccess = properties.reduce(
       (expr, propertyName) => factory.createPropertyAccessExpression(expr, factory.createIdentifier(propertyName)),
       expectCall
     );
-    return expected ? call(propertyAccess, expected) : call(propertyAccess);
+    return expected ? call(context, propertyAccess, expected) : call(context, propertyAccess);
   };
 
-  const text = (expr: ts.Expression, opName: string, expr2?: ts.Expression) => `${expr.getText()} ${opName}${expr2 ? ` ${expr2.getText()}` : ''}`;
+const text = (expr: ts.Expression, opName: string, expr2?: ts.Expression) => `${expr.getText()} ${opName}${expr2 ? ` ${expr2.getText()}` : ''}`;
+
+//---------------------------------------------------------------------------
+// Special case handling
+type SpecialCase = { check: (expr: ts.Expression) => boolean; text: string; notText: string; fn: string };
+const specialCases: SpecialCase[] = [
+  { check: (expr) => expr.kind === ts.SyntaxKind.NullKeyword, text: 'is null', notText: 'is not null', fn: 'toBeNull' },
+  {
+    check: (expr) => ts.isIdentifier(expr) && expr.escapedText === 'undefined',
+    text: 'is undefined',
+    notText: 'is not undefined',
+    fn: 'toBeUndefined',
+  },
+  { check: (expr) => ts.isIdentifier(expr) && expr.escapedText === 'NaN', text: 'is NaN', notText: 'is not NaN', fn: 'toBeNaN' },
+];
+
+const getSpecialCase = (context: ts.TransformationContext, cond: BinaryCondition) => {
+  const findSpecialCase = (expr: ts.Expression) => specialCases.find((c) => c.check(expr));
+  let inverse: boolean;
+
+  if (cond.op.kind === ts.SyntaxKind.EqualsEqualsEqualsToken) inverse = false;
+  else if (cond.op.kind === ts.SyntaxKind.ExclamationEqualsEqualsToken) inverse = true;
+  else return null;
+
+  const leftCase = findSpecialCase(cond.lhs);
+  const rightCase = findSpecialCase(cond.rhs);
+
+  const ret = (lhs: ts.Expression, special: SpecialCase): TransformedCondition => {
+    const expect = createExpect(context);
+    return {
+      title: inverse ? text(lhs, special.notText) : text(lhs, special.text),
+      expression: inverse ? expect(lhs, undefined, 'not', special.fn) : expect(lhs, undefined, special.fn),
+    };
+  };
+
+  if (leftCase && !rightCase) return ret(cond.rhs, leftCase);
+  else if (rightCase) return ret(cond.lhs, rightCase);
+  else return null;
+};
+
+export const transformCondition = (context: ts.TransformationContext, cond: Condition): TransformedCondition => {
+  const expect = createExpect(context);
 
   //---------------------------------------------------------------------------
   // Check for the straightforward cases: truthy and falsy conditions
@@ -39,61 +81,36 @@ export const transformCondition = (context: ts.TransformationContext, cond: Cond
   }
 
   //---------------------------------------------------------------------------
-  // Declare the special cases for which Jest has special functions
-  type SpecialCase = { check: (expr: ts.Expression) => boolean; text: string; notText: string; fn: string };
-  const specialCases: SpecialCase[] = [
-    { check: (expr) => expr.kind === ts.SyntaxKind.NullKeyword, text: 'is null', notText: 'is not null', fn: 'toBeNull' },
-    {
-      check: (expr) => ts.isIdentifier(expr) && expr.escapedText === 'undefined',
-      text: 'is undefined',
-      notText: 'is not undefined',
-      fn: 'toBeUndefined',
-    },
-    { check: (expr) => ts.isIdentifier(expr) && expr.escapedText === 'NaN', text: 'is NaN', notText: 'is not NaN', fn: 'toBeNaN' },
-  ];
-  const findSpecialCase = (expr: ts.Expression) => specialCases.find((c) => c.check(expr));
-
-  //---------------------------------------------------------------------------
-  // Helper function for use in the strict equality checks, to handle the
-  // special cases
-  const strictEquality = ({ inverse }: { inverse: boolean }) => {
-    const ret = (lhs: ts.Expression, rhs: ts.Expression): TransformedCondition => {
-      const special = findSpecialCase(rhs);
-      return special
-        ? {
-            title: inverse ? text(lhs, special.notText) : text(lhs, special.text),
-            expression: inverse ? expect(lhs, undefined, 'not', special.fn) : expect(lhs, undefined, special.fn),
-          }
-        : {
-            title: inverse ? text(lhs, 'does not strictly equal', rhs) : text(lhs, 'strictly equals', rhs),
-            expression: inverse ? expect(lhs, rhs, 'not', 'toStrictEqual') : expect(lhs, rhs, 'toStrictEqual'),
-          };
-    };
-
-    if (findSpecialCase(cond.lhs) && !findSpecialCase(cond.rhs)) return ret(cond.rhs, cond.lhs);
-    return ret(cond.lhs, cond.rhs);
-  };
+  // Check for special cases
+  const specialCase = getSpecialCase(context, cond);
+  if (specialCase) return specialCase;
 
   //---------------------------------------------------------------------------
   // Process the known default conditions using Jest's special functions
   switch (cond.op.kind) {
+    case ts.SyntaxKind.EqualsEqualsEqualsToken:
+      return {
+        title: text(cond.lhs, 'strictly equals', cond.rhs),
+        expression: expect(cond.lhs, cond.rhs, 'toStrictEqual'),
+      };
+
+    case ts.SyntaxKind.ExclamationEqualsEqualsToken:
+      return {
+        title: text(cond.lhs, 'does not strictly equal', cond.rhs),
+        expression: expect(cond.lhs, cond.rhs, 'not', 'toStrictEqual'),
+      };
+
     case ts.SyntaxKind.EqualsEqualsToken:
       return {
         title: text(cond.lhs, 'equals', cond.rhs),
         expression: expect(cond.lhs, cond.rhs, 'toEqual'),
       };
 
-    case ts.SyntaxKind.EqualsEqualsEqualsToken:
-      return strictEquality({ inverse: false });
-
     case ts.SyntaxKind.ExclamationEqualsToken:
       return {
         title: text(cond.lhs, 'does not equal', cond.rhs),
         expression: expect(cond.lhs, cond.rhs, 'not', 'toEqual'),
       };
-
-    case ts.SyntaxKind.ExclamationEqualsEqualsToken:
-      return strictEquality({ inverse: true });
 
     case ts.SyntaxKind.LessThanToken:
       return {
