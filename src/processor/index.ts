@@ -85,7 +85,7 @@ const processor = (context: ts.TransformationContext, title: ts.StringLiteral, b
     }
   );
 
-  validate(state, context);
+  validate(context, state);
   const processedState = preprocess(state);
 
   return {
