@@ -9,6 +9,7 @@ import { mergeSetupBlocks, processSetupBlock, SetupBlockInfo } from './process-s
 import { looksLikeACondition, processCondition } from './conditions';
 import { Block } from './block';
 import { preprocess } from './preprocess';
+import { processWhereBlocks } from './where';
 
 const processSetup = (context: ts.TransformationContext, state: State): SetupBlockInfo => {
   const setupBlocks = state.blocks.filter((block) => block.type === 'setup').flatMap((block) => block.statements);
@@ -68,11 +69,8 @@ const processCleanup = (state: State): CleanupInfo => {
 };
 
 const processWhere = (context: ts.TransformationContext, state: State): WhereInfo => {
-  const factory = context.factory;
   const whereBlocks = state.blocks.filter((block) => block.type === 'where');
-  return {
-    cases: [],
-  };
+  return processWhereBlocks(context, whereBlocks);
 };
 
 const processor = (context: ts.TransformationContext, title: ts.StringLiteral, block: ts.Block): ProcessorOutput | null => {
