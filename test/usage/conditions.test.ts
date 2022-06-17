@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 describe('Conditions', async () => {
   when: "value expressions"
   const a = 1, b = 2, c = [1, 2, 3], e = new Error();

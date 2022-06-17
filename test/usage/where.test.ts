@@ -1,4 +1,4 @@
-let A: number, B: number, C: number;
+// @ts-nocheck
 
 describe('where', () => {
   describe('$A + $B when using a single table', () => {
