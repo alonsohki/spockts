@@ -15,7 +15,7 @@ describe('where', () => {
     4 | 5 || 9
   });
 
-  describe('$A + $B when using a appending rows', () => {
+  describe('$A + $B when appending rows', () => {
     expect: "A + B equals C"
     A + B === C
 
@@ -28,7 +28,7 @@ describe('where', () => {
     4 | 5 || 9
   });
 
-  describe('$A + $B when using a appending columns', () => {
+  describe('$A + $B when appending columns', () => {
     expect: "A + B equals C"
     A + B === C
 
