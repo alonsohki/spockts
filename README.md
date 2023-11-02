@@ -4,24 +4,43 @@ This project is still Work In Progress, but should be soon available in npmjs.
 
 ## Example
 ```typescript
-describe('when-then tests', () => {
-  given:
-  const a = 1, b = 2;
+describe('where', () => {
+  describe('$A + $B when using a single table', () => {
+    expect: "A + B equals C"
+    A + B === C
 
-  when: "when adding a and b"
-  const c = a + b;
+    where:
+    A | B || C
+    1 | 2 || 3
+    4 | 5 || 9
+  });
 
-  then:
-  c === a + b
-  c > a
-  c > b
+  describe('$A + $B when using a appending rows', () => {
+    expect: "A + B equals C"
+    A + B === C
 
-  when: "when assigning c to d"
-  const d = c;
+    where:
+    A | B || C
+    1 | 2 || 3
 
-  then:
-  d === a + b
-  d > a
-  d > b
+    and:
+    A | B || C
+    4 | 5 || 9
+  });
+
+  describe('$A + $B when using a appending columns', () => {
+    expect: "A + B equals C"
+    A + B === C
+
+    where:
+    A | B
+    1 | 2
+    4 | 5
+
+    and:
+    C
+    3
+    9
+  });
 });
 ```
